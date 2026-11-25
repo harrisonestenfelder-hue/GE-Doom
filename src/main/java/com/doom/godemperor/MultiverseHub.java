@@ -184,9 +184,7 @@ public final class MultiverseHub {
                     if (distance < (radius * radius) - 3 || distance > (radius * radius) + 3) {
                         continue;
                     }
-                    boolean gateOpening =
-                            (Math.abs(x) <= 5 && (Math.abs(z) >= 36))
-                            || (Math.abs(z) <= 5 && (Math.abs(x) >= 36));
+                    boolean gateOpening = isGateOpening(x, z);
                     if (!gateOpening || y > FLOOR_Y + 14) {
                         put(level, new BlockPos(x, y, z), wall);
                     }
@@ -248,11 +246,13 @@ public final class MultiverseHub {
         }
         put(level, new BlockPos(0, FLOOR_Y + 30, 0), light);
 
-        // Four monumental gateways set into the cardinal walls.
-        buildGate(level, 0, -36, true, silverTrim, silver, gold);
-        buildGate(level, 0, 36, true, silverTrim, silver, gold);
-        buildGate(level, -36, 0, false, silverTrim, silver, gold);
-        buildGate(level, 36, 0, false, silverTrim, silver, gold);
+        // Twelve monumental gateways encircle the celestial temple.
+        for (int i = 0; i < 12; i++) {
+            double angle = Math.PI * 2.0D * i / 12.0D;
+            int gateX = (int) Math.round(Math.cos(angle) * 36.0D);
+            int gateZ = (int) Math.round(Math.sin(angle) * 36.0D);
+            buildRadialGate(level, gateX, gateZ, angle, silverTrim, silver, gold);
+        }
 
         // Gold-and-sea-lantern threshold strips mark each portal approach.
         for (int distance = 9; distance <= 34; distance++) {
@@ -282,6 +282,62 @@ public final class MultiverseHub {
         for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 5; y++) {
             put(level, new BlockPos(-1, y, 0), glass);
             put(level, new BlockPos(1, y, 0), glass);
+        }
+    }
+
+    private static boolean isGateOpening(int x, int z) {
+        for (int i = 0; i < 12; i++) {
+            double angle = Math.PI * 2.0D * i / 12.0D;
+            double nx = Math.cos(angle);
+            double nz = Math.sin(angle);
+            double tx = -nz;
+            double tz = nx;
+            double tangent = x * tx + z * tz;
+            double radial = x * nx + z * nz;
+            if (Math.abs(tangent) <= 5.2D && Math.abs(radial - 36.0D) <= 3.0D) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static void buildRadialGate(
+            ServerLevel level,
+            int centerX,
+            int centerZ,
+            double angle,
+            BlockState stone,
+            BlockState silver,
+            BlockState gold
+    ) {
+        double tx = -Math.sin(angle);
+        double tz = Math.cos(angle);
+
+        for (int side : new int[]{-5, 5}) {
+            int x = (int) Math.round(centerX + tx * side);
+            int z = (int) Math.round(centerZ + tz * side);
+            for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 13; y++) {
+                put(level, new BlockPos(x, y, z),
+                        y >= FLOOR_Y + 12 ? gold : stone);
+            }
+        }
+
+        for (int offset = -5; offset <= 5; offset++) {
+            int x = (int) Math.round(centerX + tx * offset);
+            int z = (int) Math.round(centerZ + tz * offset);
+            put(level, new BlockPos(x, FLOOR_Y + 13, z),
+                    Math.abs(offset) <= 1 ? gold : silver);
+            put(level, new BlockPos(x, FLOOR_Y, z),
+                    Math.abs(offset) <= 1 ? gold : silver);
+        }
+
+        // Gold-lit ribs frame the walk-through opening without blocking it.
+        for (int y = FLOOR_Y + 2; y <= FLOOR_Y + 11; y += 3) {
+            for (int side : new int[]{-4, 4}) {
+                int x = (int) Math.round(centerX + tx * side);
+                int z = (int) Math.round(centerZ + tz * side);
+                put(level, new BlockPos(x, y, z), silver);
+            }
         }
     }
 
