@@ -8,7 +8,6 @@ import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class DoomSkillTreeScreen extends Screen {
@@ -29,9 +28,6 @@ public class DoomSkillTreeScreen extends Screen {
 
     private int scrollOffset = 0;
 
-    private Button unlockButton;
-    private final List<Button> loadoutButtons = new ArrayList<>();
-
     public DoomSkillTreeScreen() {
         this(DoomSkillTree.Stage.DOCTOR_DOOM, null);
     }
@@ -41,10 +37,12 @@ public class DoomSkillTreeScreen extends Screen {
             DoomSkillTree.Branch branch
     ) {
         super(Component.literal("Doom: Path to Absolute Power"));
+
         this.stage = stage;
         this.branch = branch;
 
         List<DoomSkillTree.Skill> skills = getVisibleSkills();
+
         if (!skills.isEmpty()) {
             selectedSkill = skills.get(0);
         }
@@ -62,6 +60,22 @@ public class DoomSkillTreeScreen extends Screen {
         return isDoctorDoom() ? GREEN_DARK : 0xFF343D48;
     }
 
+    private int detailWidth() {
+        return Math.min(260, Math.max(210, width / 3));
+    }
+
+    private int detailX() {
+        return width - detailWidth() - 18;
+    }
+
+    private int treeRight() {
+        return detailX() - 12;
+    }
+
+    private int treeBottom() {
+        return height - 105;
+    }
+
     private List<DoomSkillTree.Skill> getVisibleSkills() {
         return DoomSkillTree.SKILLS.stream()
                 .filter(skill -> skill.stage() == stage)
@@ -72,7 +86,6 @@ public class DoomSkillTreeScreen extends Screen {
     @Override
     protected void init() {
         clearWidgets();
-        loadoutButtons.clear();
 
         int center = width / 2;
 
@@ -90,15 +103,22 @@ public class DoomSkillTreeScreen extends Screen {
 
         // BRANCH FILTERS
 
-        DoomSkillTree.Branch[] branches = {
-                null,
-                DoomSkillTree.Branch.TECHNOLOGY,
-                DoomSkillTree.Branch.SORCERY,
-                DoomSkillTree.Branch.COMBAT,
-                DoomSkillTree.Branch.DOMINION
-        };
+        DoomSkillTree.Branch[] branches;
+        String[] names;
 
-        if (!isDoctorDoom()) {
+        if (isDoctorDoom()) {
+            branches = new DoomSkillTree.Branch[] {
+                    null,
+                    DoomSkillTree.Branch.TECHNOLOGY,
+                    DoomSkillTree.Branch.SORCERY,
+                    DoomSkillTree.Branch.COMBAT,
+                    DoomSkillTree.Branch.DOMINION
+            };
+
+            names = new String[] {
+                    "ALL", "TECH", "SORCERY", "COMBAT", "DOMINION"
+            };
+        } else {
             branches = new DoomSkillTree.Branch[] {
                     null,
                     DoomSkillTree.Branch.REALITY,
@@ -106,23 +126,9 @@ public class DoomSkillTreeScreen extends Screen {
                     DoomSkillTree.Branch.CREATION,
                     DoomSkillTree.Branch.ABSOLUTE_POWER
             };
-        }
 
-        String[] names = {
-                "ALL",
-                "TECH",
-                "SORCERY",
-                "COMBAT",
-                "DOMINION"
-        };
-
-        if (!isDoctorDoom()) {
             names = new String[] {
-                    "ALL",
-                    "REALITY",
-                    "COSMIC",
-                    "CREATION",
-                    "ABSOLUTE"
+                    "ALL", "REALITY", "COSMIC", "CREATION", "ABSOLUTE"
             };
         }
 
@@ -142,11 +148,9 @@ public class DoomSkillTreeScreen extends Screen {
             ).build());
         }
 
-        // UNLOCK BUTTON
+        // UNLOCK BUTTON - INSIDE THE DETAILS PANEL
 
-        int detailX = width - 278;
-
-        unlockButton = addRenderableWidget(Button.builder(
+        addRenderableWidget(Button.builder(
                 Component.literal("UNLOCK SKILL"),
                 button -> {
                     if (selectedSkill != null) {
@@ -154,26 +158,27 @@ public class DoomSkillTreeScreen extends Screen {
                     }
                 }
         ).bounds(
-                detailX + 15,
-                height - 210,
-                248,
+                detailX() + 12,
+                height - 139,
+                detailWidth() - 24,
                 25
         ).build());
 
-        // NINE ABILITY LOADOUT SLOTS
+        // NINE LOADOUT SLOTS - SEPARATE BOTTOM BAR
 
         String[] keys = {
-                "Z", "X", "C",
-                "V", "F", "R",
-                "Q", "M4", "M5"
+                "Z", "X", "C", "V", "F",
+                "R", "Q", "M4", "M5"
         };
+
+        int slotWidth = (width - 36 - 32) / 9;
 
         for (int i = 0; i < 9; i++) {
             final int slot = i;
 
-            Button button = addRenderableWidget(Button.builder(
+            addRenderableWidget(Button.builder(
                     Component.literal((i + 1) + "  " + keys[i]),
-                    pressed -> {
+                    button -> {
                         if (selectedSkill != null) {
                             DoomNetwork.requestAssign(
                                     slot,
@@ -182,13 +187,11 @@ public class DoomSkillTreeScreen extends Screen {
                         }
                     }
             ).bounds(
-                    detailX + 15 + (i % 3) * 84,
-                    height - 166 + (i / 3) * 29,
-                    78,
-                    24
+                    18 + i * (slotWidth + 4),
+                    height - 69,
+                    slotWidth,
+                    23
             ).build());
-
-            loadoutButtons.add(button);
         }
 
         // CLOSE
@@ -207,10 +210,8 @@ public class DoomSkillTreeScreen extends Screen {
     }
 
     private void openStage(DoomSkillTree.Stage selected) {
-        DoomSkillTree.Branch firstBranch = null;
-
         Minecraft.getInstance().setScreen(
-                new DoomSkillTreeScreen(selected, firstBranch)
+                new DoomSkillTreeScreen(selected, null)
         );
     }
 
@@ -222,14 +223,14 @@ public class DoomSkillTreeScreen extends Screen {
 
     private void updateScrollLimit() {
         int contentHeight = getVisibleSkills().size() * ROW_HEIGHT;
-        int viewportHeight = Math.max(100, height - 165);
+        int viewportHeight = Math.max(50, treeBottom() - 122);
 
         int maxScroll = Math.max(0, contentHeight - viewportHeight);
-        scrollOffset = Math.max(0, Math.min(scrollOffset, maxScroll));
-    }
 
-    private void selectSkill(DoomSkillTree.Skill skill) {
-        selectedSkill = skill;
+        scrollOffset = Math.max(
+                0,
+                Math.min(scrollOffset, maxScroll)
+        );
     }
 
     private String formatName(String name) {
@@ -285,6 +286,7 @@ public class DoomSkillTreeScreen extends Screen {
         int color = accent();
 
         int outer = selected ? 0xFFFFD56A : color;
+
         int inner = isDoctorDoom()
                 ? 0xFF07150D
                 : 0xFF111820;
@@ -326,26 +328,19 @@ public class DoomSkillTreeScreen extends Screen {
         boolean doom = isDoctorDoom();
 
         int accent = accent();
-        int accentDark = accentDark();
-
         int left = 18;
         int top = 96;
-        int detailX = width - 278;
-        int detailWidth = 260;
-        int treeRight = detailX - 12;
-        int treeWidth = treeRight - left;
+        int detailX = detailX();
+        int detailWidth = detailWidth();
+        int treeRight = treeRight();
+        int treeBottom = treeBottom();
 
-        int treeBottom = height - 48;
+        int treeWidth = treeRight - left;
         int viewportHeight = treeBottom - top;
 
-        // BACKGROUND - NO BLUR, TO AVOID THE PREVIOUS CRASH
+        // BACKGROUND
 
-        graphics.fill(
-                0, 0, width, height,
-                0xE8000000
-        );
-
-        // SUBTLE BACKGROUND PANELS
+        graphics.fill(0, 0, width, height, 0xE8000000);
 
         graphics.fill(
                 0, 0, width, height,
@@ -372,42 +367,24 @@ public class DoomSkillTreeScreen extends Screen {
                 accent
         );
 
-        // STAGE AND BRANCH LABELS
-
-        graphics.drawString(
-                font,
-                doom ? "DOCTOR DOOM" : "GOD EMPEROR DOOM",
-                left + 5,
-                91,
-                accent
-        );
-
         // TREE PANEL
 
-        graphics.fill(
-                left,
-                top,
-                treeRight,
-                treeBottom,
-                PANEL
-        );
+        graphics.fill(left, top, treeRight, treeBottom, PANEL);
 
         graphics.renderOutline(
                 left,
                 top,
                 treeWidth,
                 viewportHeight,
-                accentDark
+                accentDark()
         );
-
-        // TREE HEADER
 
         graphics.fill(
                 left + 1,
                 top + 1,
                 treeRight - 1,
                 top + 24,
-                0xFF171D24
+                PANEL_LIGHT
         );
 
         graphics.drawString(
@@ -420,7 +397,7 @@ public class DoomSkillTreeScreen extends Screen {
                 accent
         );
 
-        // TREE CONTENT
+        // SKILL TREE CONTENT
 
         List<DoomSkillTree.Skill> skills = getVisibleSkills();
 
@@ -434,21 +411,15 @@ public class DoomSkillTreeScreen extends Screen {
                 treeBottom - 2
         );
 
-        // CONNECTING PATH
-
         if (skills.size() > 1) {
-            int firstNodeY = firstY - scrollOffset + 10;
-            int lastNodeY = firstY
-                    + (skills.size() - 1) * ROW_HEIGHT
-                    - scrollOffset + 10;
-
             drawLine(
                     graphics,
                     nodeX,
-                    firstNodeY,
+                    firstY - scrollOffset + 10,
                     nodeX,
-                    lastNodeY,
-                    accentDark
+                    firstY + (skills.size() - 1) * ROW_HEIGHT
+                            - scrollOffset + 10,
+                    accentDark()
             );
         }
 
@@ -458,21 +429,18 @@ public class DoomSkillTreeScreen extends Screen {
             int rowY = firstY + i * ROW_HEIGHT - scrollOffset;
             int nodeY = rowY + 22;
 
-            if (rowY + 55 < top + 25 ||
-                    rowY > treeBottom) {
+            if (rowY + 55 < top + 25 || rowY > treeBottom) {
                 continue;
             }
 
-            boolean selected = selectedSkill != null &&
-                    selectedSkill.id().equals(skill.id());
+            boolean selected = selectedSkill != null
+                    && selectedSkill.id().equals(skill.id());
 
             boolean hovered =
-                    mouseX >= left + 5 &&
-                    mouseX <= treeRight - 5 &&
-                    mouseY >= rowY - 4 &&
-                    mouseY <= rowY + 57;
-
-            // NODE CARD
+                    mouseX >= left + 5
+                    && mouseX <= treeRight - 5
+                    && mouseY >= rowY - 4
+                    && mouseY <= rowY + 57;
 
             graphics.fill(
                     left + 10,
@@ -492,8 +460,6 @@ public class DoomSkillTreeScreen extends Screen {
                     selected ? GOLD : 0xFF3D4852
             );
 
-            // NODE
-
             drawNode(
                     graphics,
                     nodeX,
@@ -501,8 +467,6 @@ public class DoomSkillTreeScreen extends Screen {
                     selected,
                     hovered
             );
-
-            // SKILL NAME
 
             graphics.drawString(
                     font,
@@ -512,8 +476,6 @@ public class DoomSkillTreeScreen extends Screen {
                     selected ? GOLD : 0xFFFFFFFF
             );
 
-            // BRANCH AND TIER
-
             graphics.drawString(
                     font,
                     formatName(skill.branch().name())
@@ -522,8 +484,6 @@ public class DoomSkillTreeScreen extends Screen {
                     rowY + 19,
                     accent
             );
-
-            // COST
 
             graphics.drawString(
                     font,
@@ -544,11 +504,7 @@ public class DoomSkillTreeScreen extends Screen {
 
         graphics.disableScissor();
 
-        // SCROLL INDICATOR
-
-        int contentHeight = skills.size() * ROW_HEIGHT;
-
-        if (contentHeight > viewportHeight - 26) {
+        if (skills.size() * ROW_HEIGHT > viewportHeight - 26) {
             graphics.drawString(
                     font,
                     "SCROLL TO EXPLORE",
@@ -558,7 +514,7 @@ public class DoomSkillTreeScreen extends Screen {
             );
         }
 
-        // DETAIL PANEL
+        // DETAILS PANEL
 
         graphics.fill(
                 detailX,
@@ -573,7 +529,7 @@ public class DoomSkillTreeScreen extends Screen {
                 top,
                 detailWidth,
                 viewportHeight,
-                accentDark
+                accentDark()
         );
 
         graphics.fill(
@@ -581,7 +537,7 @@ public class DoomSkillTreeScreen extends Screen {
                 top + 1,
                 detailX + detailWidth - 1,
                 top + 25,
-                0xFF171D24
+                PANEL_LIGHT
         );
 
         graphics.drawString(
@@ -649,6 +605,7 @@ public class DoomSkillTreeScreen extends Screen {
                         y,
                         0xFFD0D6DC
                 );
+
                 y += 12;
             }
 
@@ -683,8 +640,7 @@ public class DoomSkillTreeScreen extends Screen {
                         SILVER
                 );
             } else {
-                for (String prerequisite :
-                        selectedSkill.prerequisites()) {
+                for (String prerequisite : selectedSkill.prerequisites()) {
                     graphics.drawString(
                             font,
                             "- " + formatName(prerequisite),
@@ -692,6 +648,7 @@ public class DoomSkillTreeScreen extends Screen {
                             y,
                             SILVER
                     );
+
                     y += 13;
                 }
             }
@@ -705,22 +662,30 @@ public class DoomSkillTreeScreen extends Screen {
             );
         }
 
-        // LOADOUT HEADER
+        // LOADOUT BAR - OUTSIDE THE TREE AND DETAILS PANELS
 
-        graphics.drawString(
-                font,
-                "ABILITY LOADOUT",
-                detailX + 14,
-                height - 190,
-                accent
+        graphics.fill(
+                12,
+                height - 94,
+                width - 12,
+                height - 39,
+                PANEL
         );
 
-        graphics.drawString(
+        graphics.renderOutline(
+                12,
+                height - 94,
+                width - 24,
+                55,
+                accentDark()
+        );
+
+        graphics.drawCenteredString(
                 font,
-                "Select a skill, then choose a slot.",
-                detailX + 14,
-                height - 178,
-                SILVER
+                "ABILITY LOADOUT  |  SELECT A SKILL, THEN SELECT A SLOT",
+                width / 2,
+                height - 89,
+                accent
         );
 
         // FOOTER
@@ -737,8 +702,6 @@ public class DoomSkillTreeScreen extends Screen {
 
         super.render(graphics, mouseX, mouseY, partialTick);
     }
-
-    // CLICK SKILL NODES
 
     @Override
     public boolean mouseClicked(
@@ -757,15 +720,14 @@ public class DoomSkillTreeScreen extends Screen {
         double mouseY = event.y();
 
         int left = 18;
-        int detailX = width - 278;
-        int treeRight = detailX - 12;
+        int treeRight = treeRight();
         int top = 96;
-        int treeBottom = height - 48;
+        int treeBottom = treeBottom();
 
-        if (mouseX < left + 5 ||
-                mouseX > treeRight - 5 ||
-                mouseY < top + 26 ||
-                mouseY > treeBottom) {
+        if (mouseX < left + 5
+                || mouseX > treeRight - 5
+                || mouseY < top + 26
+                || mouseY > treeBottom) {
             return false;
         }
 
@@ -776,17 +738,14 @@ public class DoomSkillTreeScreen extends Screen {
         for (int i = 0; i < skills.size(); i++) {
             int rowY = firstY + i * ROW_HEIGHT - scrollOffset;
 
-            if (mouseY >= rowY - 4 &&
-                    mouseY <= rowY + 56) {
-                selectSkill(skills.get(i));
+            if (mouseY >= rowY - 4 && mouseY <= rowY + 56) {
+                selectedSkill = skills.get(i);
                 return true;
             }
         }
 
         return false;
     }
-
-    // SCROLL THE TREE
 
     @Override
     public boolean mouseScrolled(
@@ -795,16 +754,10 @@ public class DoomSkillTreeScreen extends Screen {
             double horizontalAmount,
             double verticalAmount
     ) {
-        int left = 18;
-        int detailX = width - 278;
-        int treeRight = detailX - 12;
-        int top = 96;
-        int treeBottom = height - 48;
-
-        if (mouseX >= left &&
-                mouseX <= treeRight &&
-                mouseY >= top &&
-                mouseY <= treeBottom) {
+        if (mouseX >= 18
+                && mouseX <= treeRight()
+                && mouseY >= 96
+                && mouseY <= treeBottom()) {
 
             scrollOffset -= (int) (verticalAmount * 45);
             updateScrollLimit();
