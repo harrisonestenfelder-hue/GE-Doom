@@ -15,8 +15,6 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.attachment.AttachmentType;
 
-import org.joml.Vector3f;
-
 import java.util.Comparator;
 import java.util.function.Supplier;
 
@@ -27,22 +25,13 @@ public final class DoomAbilities {
     // NORMAL DOCTOR DOOM ENERGY COLORS
 
     private static final DustParticleOptions REPULSOR_GREEN =
-            new DustParticleOptions(
-                    new Vector3f(0.05F, 1.0F, 0.08F),
-                    1.5F
-            );
+            new DustParticleOptions(0x0DFF20, 1.5F);
 
     private static final DustParticleOptions ARCANE_GREEN =
-            new DustParticleOptions(
-                    new Vector3f(0.0F, 0.65F, 0.12F),
-                    1.35F
-            );
+            new DustParticleOptions(0x00A820, 1.35F);
 
     private static final DustParticleOptions DASH_GREEN =
-            new DustParticleOptions(
-                    new Vector3f(0.08F, 0.9F, 0.18F),
-                    1.2F
-            );
+            new DustParticleOptions(0x15E83A, 1.2F);
 
     public record AbilityCooldowns(
             long repulsorReadyAt,
