@@ -64,12 +64,33 @@ public final class DoomNetwork {
         }
     }
 
+    public record ActivateAbility(int slot)
+            implements CustomPacketPayload {
+
+        public static final Type<ActivateAbility> TYPE =
+                new Type<>(Identifier.fromNamespaceAndPath(
+                        GodEmperorDoom.MOD_ID,
+                        "activate_ability"
+                ));
+
+        public static final StreamCodec<ByteBuf, ActivateAbility> STREAM_CODEC =
+                StreamCodec.composite(
+                        ByteBufCodecs.VAR_INT,
+                        ActivateAbility::slot,
+                        ActivateAbility::new
+                );
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     @EventBusSubscriber(modid = GodEmperorDoom.MOD_ID)
     public static class Registration {
 
         @SubscribeEvent
         public static void register(RegisterPayloadHandlersEvent event) {
-
             var registrar = event.registrar("1");
 
             registrar.playToServer(
@@ -82,6 +103,12 @@ public final class DoomNetwork {
                     AssignSkill.TYPE,
                     AssignSkill.STREAM_CODEC,
                     DoomNetwork::handleAssign
+            );
+
+            registrar.playToServer(
+                    ActivateAbility.TYPE,
+                    ActivateAbility.STREAM_CODEC,
+                    DoomNetwork::handleActivate
             );
         }
     }
@@ -122,11 +149,31 @@ public final class DoomNetwork {
         );
     }
 
+    private static void handleActivate(
+            ActivateAbility packet,
+            IPayloadContext context
+    ) {
+        if (!(context.player() instanceof ServerPlayer player)) {
+            return;
+        }
+
+        if (packet.slot() < 0 ||
+                packet.slot() >= DoomLoadout.SLOT_COUNT) {
+            return;
+        }
+
+        DoomAbilities.activate(player, packet.slot());
+    }
+
     public static void requestUnlock(String skillId) {
         DoomClientNetwork.requestUnlock(skillId);
     }
 
     public static void requestAssign(int slot, String skillId) {
         DoomClientNetwork.requestAssign(slot, skillId);
+    }
+
+    public static void requestActivate(int slot) {
+        DoomClientNetwork.requestActivate(slot);
     }
 }
