@@ -10,6 +10,8 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
@@ -23,8 +25,6 @@ import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.item.equipment.EquipmentAsset;
 import net.minecraft.world.item.equipment.EquipmentAssets;
-
-import net.minecraft.server.level.ServerPlayer;
 
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
@@ -415,14 +415,6 @@ public class GodEmperorDoom {
         }
     }
 
-    // BEYONDER BOSS REWARD
-
-    public static void rewardBeyonderDefeat(ServerPlayer player) {
-        player.getInventory().add(
-                new ItemStack(BEYONDER_INGOT.get(), 24)
-        );
-    }
-
     // GOD EMPEROR STORY UNLOCK
 
     public static void unlockGodEmperorStory(ServerPlayer player) {
@@ -454,9 +446,9 @@ public class GodEmperorDoom {
         if (!progress.godEmperorUnlocked()) {
             player.displayClientMessage(
                     Component.literal(
-                            "You have not unlocked the God Emperor power."
+                            "You have not yet unlocked the God Emperor power."
                     ),
-                    true
+                    false
             );
             return false;
         }
@@ -466,9 +458,9 @@ public class GodEmperorDoom {
         if (data.awakened()) {
             player.displayClientMessage(
                     Component.literal(
-                            "You are already the God Emperor."
+                            "God Emperor Doom is already awakened."
                     ),
-                    true
+                    false
             );
             return false;
         }
@@ -483,9 +475,9 @@ public class GodEmperorDoom {
                 )
         );
 
-        // WHITE GOD EMPEROR ENERGY
+        ServerLevel level = (ServerLevel) player.level();
 
-        player.serverLevel().sendParticles(
+        level.sendParticles(
                 ParticleTypes.END_ROD,
                 player.getX(),
                 player.getY() + 1.0,
@@ -497,7 +489,7 @@ public class GodEmperorDoom {
                 0.12
         );
 
-        player.serverLevel().sendParticles(
+        level.sendParticles(
                 ParticleTypes.FLASH,
                 player.getX(),
                 player.getY() + 1.0,
@@ -519,11 +511,21 @@ public class GodEmperorDoom {
         );
 
         player.displayClientMessage(
-                Component.literal("GOD EMPEROR DOOM AWAKENED."),
+                Component.literal(
+                        "GOD EMPEROR DOOM AWAKENED."
+                ),
                 false
         );
 
         return true;
+    }
+
+    // BEYONDER BOSS REWARD
+
+    public static void rewardBeyonderDefeat(ServerPlayer player) {
+        player.getInventory().add(
+                new ItemStack(BEYONDER_INGOT.get(), 24)
+        );
     }
 
     // COMMANDS
@@ -548,7 +550,8 @@ public class GodEmperorDoom {
                                             () -> Component.literal(
                                                     "Doom Energy: "
                                                             + data.energy()
-                                                            + "/100 | Awakened: "
+                                                            + "/100"
+                                                            + " | Awakened: "
                                                             + data.awakened()
                                                             + " | God Emperor Unlocked: "
                                                             + progress.godEmperorUnlocked()
