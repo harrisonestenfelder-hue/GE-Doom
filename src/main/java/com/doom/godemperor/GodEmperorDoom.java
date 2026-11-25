@@ -290,6 +290,7 @@ public class GodEmperorDoom {
     // INITIALIZATION
 
     public GodEmperorDoom(IEventBus modBus) {
+        BeyonderRegistry.register(modBus);
         ITEMS.register(modBus);
         TABS.register(modBus);
 
