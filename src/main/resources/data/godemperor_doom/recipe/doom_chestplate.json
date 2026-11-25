@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "I I",
+    "III",
+    "III"
+  ],
+  "key": {
+    "I": {
+      "item": "godemperor_doom:latverian_steel_ingot"
+    }
+  },
+  "result": {
+    "id": "godemperor_doom:doom_chestplate",
+    "count": 1
+  }
+}
