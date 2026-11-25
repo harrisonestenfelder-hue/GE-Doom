@@ -47,4 +47,8 @@ public final class DoomClientNetwork {
 
         send(new DoomNetwork.ActivateAbility(slot));
     }
+
+    public static void sendOpenMultiverseHub() {
+        send(new DoomNetwork.OpenMultiverseHub());
+    }
 }
