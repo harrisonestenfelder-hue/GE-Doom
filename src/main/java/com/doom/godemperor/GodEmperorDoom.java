@@ -350,6 +350,7 @@ public class GodEmperorDoom {
             return;
         }
 
+        MultiversePortals.tick(player);
         tickAwakeningScene(player);
 
         if (player.tickCount % 20 != 0) {
