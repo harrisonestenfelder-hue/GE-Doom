@@ -378,16 +378,28 @@ public final class MultiversePortals {
     ) {
         double tx = -Math.sin(angle);
         double tz = Math.cos(angle);
-        for (int i = 0; i < 9; i++) {
-            double sway = Math.sin(tick * 0.11D + i * 0.7D) * 0.18D;
-            double offset = (i - 4) * 0.72D;
-            double x = centerX + tx * offset + Math.cos(angle) * sway;
-            double z = centerZ + tz * offset + Math.sin(angle) * sway;
-            double y = floor + 2.0D + i;
-            level.sendParticles(new DustParticleOptions(color, 1.35F),
-                    x, y, z, 2, 0.04D, 0.10D, 0.04D, 0.01D);
-            level.sendParticles(ParticleTypes.PORTAL,
-                    x, y, z, 2, 0.08D, 0.12D, 0.08D, 0.02D);
+        double nx = Math.cos(angle);
+        double nz = Math.sin(angle);
+
+        // Fill the entire arch with a walk-through curtain of animated energy.
+        // The effect is particles only, so it never blocks player movement.
+        for (int row = 0; row < 9; row++) {
+            double y = floor + 2.0D + row * 1.18D;
+            for (int column = 0; column < 7; column++) {
+                double across = (column - 3) * 1.35D;
+                double ripple = Math.sin(tick * 0.12D + row * 0.72D
+                        + column * 0.58D) * 0.28D;
+                double depth = Math.cos(tick * 0.09D + row * 0.55D
+                        - column * 0.43D) * 0.16D;
+
+                double x = centerX + tx * (across + ripple) + nx * depth;
+                double z = centerZ + tz * (across + ripple) + nz * depth;
+
+                level.sendParticles(new DustParticleOptions(color, 1.65F),
+                        x, y, z, 1, 0.035D, 0.045D, 0.035D, 0.005D);
+                level.sendParticles(ParticleTypes.PORTAL,
+                        x, y, z, 1, 0.06D, 0.08D, 0.06D, 0.015D);
+            }
         }
     }
 }
