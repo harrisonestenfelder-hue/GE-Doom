@@ -161,7 +161,15 @@ public class DoomSkillTreeScreen extends Screen {
             float partialTick
     ) {
 
-        renderBackground(graphics, mouseX, mouseY, partialTick);
+        // FIX: Draw a translucent background without triggering blur.
+
+        graphics.fill(
+                0,
+                0,
+                this.width,
+                this.height,
+                0xC0101018
+        );
 
         int center = this.width / 2;
         int left = center - PANEL_WIDTH / 2;
