@@ -16,7 +16,7 @@ public class BeyonderRenderer extends HumanoidMobRenderer<
     public BeyonderRenderer(EntityRendererProvider.Context context) {
         super(
                 context,
-                new HumanoidModel<>(context.bakeLayer(ModelLayers.PLAYER)),
+                new HumanoidModel<>(context.bakeLayer(ModelLayers.ZOMBIE)),
                 1.1F
         );
     }
