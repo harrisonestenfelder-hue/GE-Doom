@@ -3,6 +3,7 @@ package com.doom.godemperor;
 import java.util.List;
 
 import net.minecraft.core.particles.DustParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerBossEvent;
 import net.minecraft.server.level.ServerLevel;
@@ -100,15 +101,15 @@ public class BeyonderEntity extends Monster {
         );
 
         serverLevel.sendParticles(
-                net.minecraft.core.particles.ParticleTypes.FLASH,
+                ParticleTypes.END_ROD,
                 this.getX(),
                 this.getY() + 1.0D,
                 this.getZ(),
-                1,
-                0.0D,
-                0.0D,
-                0.0D,
-                0.0D
+                25,
+                0.5D,
+                0.8D,
+                0.5D,
+                0.08D
         );
 
         List<ServerPlayer> nearbyPlayers = serverLevel.getEntitiesOfClass(
