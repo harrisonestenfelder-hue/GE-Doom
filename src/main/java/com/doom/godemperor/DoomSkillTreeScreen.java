@@ -293,7 +293,7 @@ public class DoomSkillTreeScreen extends Screen {
             graphics.fill(
                     x - 13, y - 13,
                     x + 14, y + 14,
-                    0x447FFFFFFF
+                    0x44FFFFFF
             );
         }
 
