@@ -4,7 +4,7 @@ package com.doom.godemperor;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
-import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -15,12 +15,34 @@ import net.minecraft.world.phys.Vec3;
 import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.attachment.AttachmentType;
 
+import org.joml.Vector3f;
+
 import java.util.Comparator;
 import java.util.function.Supplier;
 
 public final class DoomAbilities {
 
     private DoomAbilities() {}
+
+    // NORMAL DOCTOR DOOM ENERGY COLORS
+
+    private static final DustParticleOptions REPULSOR_GREEN =
+            new DustParticleOptions(
+                    new Vector3f(0.05F, 1.0F, 0.08F),
+                    1.5F
+            );
+
+    private static final DustParticleOptions ARCANE_GREEN =
+            new DustParticleOptions(
+                    new Vector3f(0.0F, 0.65F, 0.12F),
+                    1.35F
+            );
+
+    private static final DustParticleOptions DASH_GREEN =
+            new DustParticleOptions(
+                    new Vector3f(0.08F, 0.9F, 0.18F),
+                    1.2F
+            );
 
     public record AbilityCooldowns(
             long repulsorReadyAt,
@@ -193,7 +215,7 @@ public final class DoomAbilities {
         player.setData(PLAYER_ABILITY_COOLDOWNS, updated);
     }
 
-    // REPULSOR BLAST
+    // REPULSOR BLAST - BRIGHT GREEN ENERGY
 
     private static void repulsorBlast(ServerPlayer player) {
         if (!canActivate(player, "repulsor_blast", 15)) {
@@ -206,7 +228,7 @@ public final class DoomAbilities {
 
         sendBeam(
                 player,
-                ParticleTypes.ELECTRIC_SPARK,
+                REPULSOR_GREEN,
                 24.0,
                 direction
         );
@@ -222,6 +244,18 @@ public final class DoomAbilities {
                     -direction.x,
                     -direction.z
             );
+
+            player.level().sendParticles(
+                    REPULSOR_GREEN,
+                    target.getX(),
+                    target.getY() + target.getBbHeight() * 0.5,
+                    target.getZ(),
+                    24,
+                    0.35,
+                    0.35,
+                    0.35,
+                    0.08
+            );
         }
 
         spendEnergy(player, 15);
@@ -233,7 +267,7 @@ public final class DoomAbilities {
         );
     }
 
-    // ARCANE BOLT
+    // ARCANE BOLT - EMERALD GREEN MAGIC
 
     private static void arcaneBolt(ServerPlayer player) {
         if (!canActivate(player, "arcane_bolt", 20)) {
@@ -246,7 +280,7 @@ public final class DoomAbilities {
 
         sendBeam(
                 player,
-                ParticleTypes.ENCHANT,
+                ARCANE_GREEN,
                 28.0,
                 direction
         );
@@ -264,6 +298,18 @@ public final class DoomAbilities {
                             1
                     )
             );
+
+            player.level().sendParticles(
+                    ARCANE_GREEN,
+                    target.getX(),
+                    target.getY() + target.getBbHeight() * 0.5,
+                    target.getZ(),
+                    30,
+                    0.4,
+                    0.4,
+                    0.4,
+                    0.06
+            );
         }
 
         spendEnergy(player, 20);
@@ -275,7 +321,7 @@ public final class DoomAbilities {
         );
     }
 
-    // DOOM DASH
+    // DOOM DASH - GREEN ENERGY TRAIL
 
     private static void doomDash(ServerPlayer player) {
         if (!canActivate(player, "doom_dash", 20)) {
@@ -293,14 +339,14 @@ public final class DoomAbilities {
         player.setDeltaMovement(movement);
 
         player.level().sendParticles(
-                ParticleTypes.CLOUD,
+                DASH_GREEN,
                 player.getX(),
                 player.getY() + 0.5,
                 player.getZ(),
-                18,
-                0.35,
-                0.25,
-                0.35,
+                30,
+                0.45,
+                0.4,
+                0.45,
                 0.08
         );
 
@@ -357,7 +403,7 @@ public final class DoomAbilities {
                 .orElse(null);
     }
 
-    // VISUAL ENERGY BEAM
+    // COLORED ENERGY BEAM
 
     private static void sendBeam(
             ServerPlayer player,
@@ -375,7 +421,7 @@ public final class DoomAbilities {
                     position.x,
                     position.y,
                     position.z,
-                    2,
+                    3,
                     0.06,
                     0.06,
                     0.06,
