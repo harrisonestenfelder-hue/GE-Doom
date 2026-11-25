@@ -411,8 +411,12 @@ public class BeyonderEntity extends Monster {
             List<ServerPlayer> nearbyPlayers = serverLevel.getEntitiesOfClass(
                     ServerPlayer.class, this.getBoundingBox().inflate(64.0D));
             for (ServerPlayer player : nearbyPlayers) {
-                GodEmperorDoom.rewardBeyonderDefeat(player);
-                GodEmperorDoom.unlockGodEmperorStory(player);
+                GodEmperorDoom.beginGodEmperorAwakening(
+                        player,
+                        this.getX(),
+                        this.getY() + 1.5D,
+                        this.getZ()
+                );
             }
         }
         super.die(damageSource);
