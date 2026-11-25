@@ -1,4 +1,3 @@
-
 package com.doom.godemperor;
 
 import io.netty.buffer.ByteBuf;
@@ -23,8 +22,7 @@ public final class DoomNetwork {
 
         public static final Type<UnlockSkill> TYPE =
                 new Type<>(Identifier.fromNamespaceAndPath(
-                        GodEmperorDoom.MOD_ID,
-                        "unlock_skill"
+                        GodEmperorDoom.MOD_ID, "unlock_skill"
                 ));
 
         public static final StreamCodec<ByteBuf, UnlockSkill> STREAM_CODEC =
@@ -45,8 +43,7 @@ public final class DoomNetwork {
 
         public static final Type<AssignSkill> TYPE =
                 new Type<>(Identifier.fromNamespaceAndPath(
-                        GodEmperorDoom.MOD_ID,
-                        "assign_skill"
+                        GodEmperorDoom.MOD_ID, "assign_skill"
                 ));
 
         public static final StreamCodec<ByteBuf, AssignSkill> STREAM_CODEC =
@@ -69,8 +66,7 @@ public final class DoomNetwork {
 
         public static final Type<ActivateAbility> TYPE =
                 new Type<>(Identifier.fromNamespaceAndPath(
-                        GodEmperorDoom.MOD_ID,
-                        "activate_ability"
+                        GodEmperorDoom.MOD_ID, "activate_ability"
                 ));
 
         public static final StreamCodec<ByteBuf, ActivateAbility> STREAM_CODEC =
@@ -86,6 +82,23 @@ public final class DoomNetwork {
         }
     }
 
+    public record OpenMultiverseHub()
+            implements CustomPacketPayload {
+
+        public static final Type<OpenMultiverseHub> TYPE =
+                new Type<>(Identifier.fromNamespaceAndPath(
+                        GodEmperorDoom.MOD_ID, "open_multiverse_hub"
+                ));
+
+        public static final StreamCodec<ByteBuf, OpenMultiverseHub> STREAM_CODEC =
+                StreamCodec.unit(new OpenMultiverseHub());
+
+        @Override
+        public Type<? extends CustomPacketPayload> type() {
+            return TYPE;
+        }
+    }
+
     @EventBusSubscriber(modid = GodEmperorDoom.MOD_ID)
     public static class Registration {
 
@@ -93,76 +106,45 @@ public final class DoomNetwork {
         public static void register(RegisterPayloadHandlersEvent event) {
             var registrar = event.registrar("1");
 
-            registrar.playToServer(
-                    UnlockSkill.TYPE,
-                    UnlockSkill.STREAM_CODEC,
-                    DoomNetwork::handleUnlock
-            );
-
-            registrar.playToServer(
-                    AssignSkill.TYPE,
-                    AssignSkill.STREAM_CODEC,
-                    DoomNetwork::handleAssign
-            );
-
-            registrar.playToServer(
-                    ActivateAbility.TYPE,
-                    ActivateAbility.STREAM_CODEC,
-                    DoomNetwork::handleActivate
-            );
+            registrar.playToServer(UnlockSkill.TYPE, UnlockSkill.STREAM_CODEC,
+                    DoomNetwork::handleUnlock);
+            registrar.playToServer(AssignSkill.TYPE, AssignSkill.STREAM_CODEC,
+                    DoomNetwork::handleAssign);
+            registrar.playToServer(ActivateAbility.TYPE, ActivateAbility.STREAM_CODEC,
+                    DoomNetwork::handleActivate);
+            registrar.playToServer(OpenMultiverseHub.TYPE, OpenMultiverseHub.STREAM_CODEC,
+                    DoomNetwork::handleOpenMultiverseHub);
         }
     }
 
-    private static void handleUnlock(
-            UnlockSkill packet,
-            IPayloadContext context
-    ) {
-        if (!(context.player() instanceof ServerPlayer player)) {
-            return;
+    private static void handleUnlock(UnlockSkill packet, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player
+                && packet.skillId() != null && packet.skillId().length() <= 64) {
+            DoomProgression.unlockSkill(player, packet.skillId());
         }
-
-        if (packet.skillId() == null ||
-                packet.skillId().length() > 64) {
-            return;
-        }
-
-        DoomProgression.unlockSkill(player, packet.skillId());
     }
 
-    private static void handleAssign(
-            AssignSkill packet,
-            IPayloadContext context
-    ) {
-        if (!(context.player() instanceof ServerPlayer player)) {
-            return;
+    private static void handleAssign(AssignSkill packet, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player
+                && packet.skillId() != null && packet.skillId().length() <= 64) {
+            DoomLoadout.assign(player, packet.slot(), packet.skillId());
         }
-
-        if (packet.skillId() == null ||
-                packet.skillId().length() > 64) {
-            return;
-        }
-
-        DoomLoadout.assign(
-                player,
-                packet.slot(),
-                packet.skillId()
-        );
     }
 
-    private static void handleActivate(
-            ActivateAbility packet,
+    private static void handleActivate(ActivateAbility packet, IPayloadContext context) {
+        if (context.player() instanceof ServerPlayer player
+                && packet.slot() >= 0 && packet.slot() < DoomLoadout.SLOT_COUNT) {
+            DoomAbilities.activate(player, packet.slot());
+        }
+    }
+
+    private static void handleOpenMultiverseHub(
+            OpenMultiverseHub packet,
             IPayloadContext context
     ) {
-        if (!(context.player() instanceof ServerPlayer player)) {
-            return;
+        if (context.player() instanceof ServerPlayer player) {
+            MultiverseHub.toggle(player);
         }
-
-        if (packet.slot() < 0 ||
-                packet.slot() >= DoomLoadout.SLOT_COUNT) {
-            return;
-        }
-
-        DoomAbilities.activate(player, packet.slot());
     }
 
     public static void requestUnlock(String skillId) {
@@ -175,5 +157,9 @@ public final class DoomNetwork {
 
     public static void requestActivate(int slot) {
         DoomClientNetwork.requestActivate(slot);
+    }
+
+    public static void requestOpenMultiverseHub() {
+        DoomClientNetwork.sendOpenMultiverseHub();
     }
 }
