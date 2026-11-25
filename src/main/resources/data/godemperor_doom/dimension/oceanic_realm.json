@@ -1,30 +1,11 @@
 {
   "type": "minecraft:overworld",
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "biome": "minecraft:deep_ocean",
-      "features": false,
-      "lakes": false,
-      "layers": [
-        {
-          "block": "minecraft:bedrock",
-          "height": 1
-        },
-        {
-          "block": "minecraft:stone",
-          "height": 4
-        },
-        {
-          "block": "minecraft:clay",
-          "height": 3
-        },
-        {
-          "block": "minecraft:prismarine",
-          "height": 1
-        }
-      ],
-      "structure_overrides": []
+    "type": "minecraft:noise",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:deep_ocean"
     }
   }
 }
