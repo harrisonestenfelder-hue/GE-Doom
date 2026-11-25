@@ -216,10 +216,15 @@ public final class MultiversePortals {
         }
         for (int x = -8; x <= 8; x++) {
             level.setBlock(new BlockPos(x, floorY, -8), trim, 3);
-            leve    private static void buildArrivalLandmark(ServerLevel level) {
+            level.setBlock(new BlockPos(x, floorY, 8), trim, 3);
+        }
+        level.setBlock(marker, Blocks.BEACON.defaultBlockState(), 3);
+        return floorY;
+    }
+
+    private static void buildArrivalLandmark(ServerLevel level) {
         // A vertical marker scan avoids rebuilding the fortress after its own towers
         // change the terrain heightmap.
-        BlockPos markerColumn = new BlockPos(48, level.getMinY(), 48);
         for (int y = level.getMinY(); y < level.getMaxY(); y++) {
             if (level.getBlockState(new BlockPos(48, y, 48)).is(Blocks.BEACON)) {
                 return;
@@ -680,11 +685,6 @@ public final class MultiversePortals {
             double value) {
         var instance = mob.getAttribute(attribute);
         if (instance != null) instance.setBaseValue(value);
-    }
-
-, new ItemStack(Items.IRON_LEGGINGS));
-        mob.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.IRON_BOOTS));
-        level.addFreshEntity(mob);
     }
 
     private static void buildLushSanctuary(ServerLevel level) {
