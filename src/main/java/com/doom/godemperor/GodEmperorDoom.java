@@ -125,11 +125,10 @@ public final class GodEmperorDoom {
                         .then(Commands.literal("aegis")
                                 .executes(context ->
                                         activateAegis(context.getSource())))
-.then(Commands.literal("surge")
+            .then(Commands.literal("surge")
         .executes(context ->
                 activateSurge(context.getSource()))
 ));
-
     private static int showStatus(CommandSourceStack source)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
