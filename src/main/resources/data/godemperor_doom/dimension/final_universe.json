@@ -1,30 +1,11 @@
 {
   "type": "minecraft:overworld",
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "biome": "minecraft:soul_sand_valley",
-      "features": false,
-      "lakes": false,
-      "layers": [
-        {
-          "block": "minecraft:bedrock",
-          "height": 1
-        },
-        {
-          "block": "minecraft:netherrack",
-          "height": 4
-        },
-        {
-          "block": "minecraft:soul_sand",
-          "height": 3
-        },
-        {
-          "block": "minecraft:soul_sand",
-          "height": 1
-        }
-      ],
-      "structure_overrides": []
+    "type": "minecraft:noise",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:soul_sand_valley"
     }
   }
 }
