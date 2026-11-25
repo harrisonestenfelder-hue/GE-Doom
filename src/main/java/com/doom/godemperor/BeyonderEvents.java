@@ -7,10 +7,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 
-@EventBusSubscriber(
-        modid = GodEmperorDoom.MOD_ID,
-        bus = EventBusSubscriber.Bus.MOD
-)
+@EventBusSubscriber(modid = GodEmperorDoom.MOD_ID)
 public final class BeyonderEvents {
     private BeyonderEvents() {}
 
