@@ -506,6 +506,28 @@ public class GodEmperorDoom {
             );
         }
 
+        // A rising spiral and narrow pillar make the incoming power visible from a distance.
+        for (int point = 0; point < 6; point++) {
+            double angle = elapsed * 0.16D + Math.PI * 2.0D * point / 6.0D;
+            double height = 0.25D + point * 0.42D;
+            double spiralRadius = 0.35D + progress * 0.55D;
+            level.sendParticles(
+                    new DustParticleOptions(0xFFFFFF, 1.5F + (float) progress),
+                    targetX + Math.cos(angle) * spiralRadius,
+                    player.getY() + height,
+                    targetZ + Math.sin(angle) * spiralRadius,
+                    1, 0.015D, 0.035D, 0.015D, 0.005D
+            );
+        }
+
+        if (elapsed == 25 || elapsed == 75) {
+            level.playSound(
+                    null, player.blockPosition(),
+                    SoundEvents.BEACON_AMBIENT,
+                    SoundSource.PLAYERS, 1.2F, elapsed == 25 ? 0.7F : 0.9F
+            );
+        }
+
         if (elapsed == 50) {
             player.displayClientMessage(
                     Component.literal("THE COSMIC POWER FLOWS INTO YOU..."),
