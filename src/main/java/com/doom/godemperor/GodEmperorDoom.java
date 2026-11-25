@@ -129,6 +129,8 @@ public final class GodEmperorDoom {
         .executes(context ->
                 activateSurge(context.getSource()))
 ));
+}
+    
     private static int showStatus(CommandSourceStack source)
             throws com.mojang.brigadier.exceptions.CommandSyntaxException {
         ServerPlayer player = source.getPlayerOrException();
