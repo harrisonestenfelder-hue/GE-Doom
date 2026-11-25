@@ -25,6 +25,9 @@ import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 
@@ -213,29 +216,39 @@ public final class MultiversePortals {
         }
         for (int x = -8; x <= 8; x++) {
             level.setBlock(new BlockPos(x, floorY, -8), trim, 3);
-            level.setBlock(new BlockPos(x, floorY, 8), trim, 3);
+            leve    private static void buildArrivalLandmark(ServerLevel level) {
+        // A vertical marker scan avoids rebuilding the fortress after its own towers
+        // change the terrain heightmap.
+        BlockPos markerColumn = new BlockPos(48, level.getMinY(), 48);
+        for (int y = level.getMinY(); y < level.getMaxY(); y++) {
+            if (level.getBlockState(new BlockPos(48, y, 48)).is(Blocks.BEACON)) {
+                return;
+            }
         }
-        level.setBlock(marker, Blocks.BEACON.defaultBlockState(), 3);
-        return floorY;
-    }
 
-    private static void buildArrivalLandmark(ServerLevel level) {
-        // Generate the fortress chunk first; otherwise an ungenerated chunk can report Y=0
-        // and place the entire stronghold beneath the actual world.
-        level.getChunk(1, 1);
+        // Force all chunks used by the citadel and its approach to generate first.
+        for (int cx = -1; cx <= 6; cx++) {
+            for (int cz = -1; cz <= 6; cz++) {
+                level.getChunk(cx, cz);
+            }
+        }
+
         int baseY = Math.max(level.getMinY() + 8, level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                24, 24) - 1);
-        BlockPos marker = new BlockPos(24, baseY + 26, 24);
-        if (level.getBlockState(marker).is(Blocks.BEACON)) {
-            return;
-        }
+                48, 48) - 1);
 
-        // Remove the previous underground fortress version without carving out natural terrain.
-        for (int oldY = 8; oldY <= Math.min(80, baseY + 25); oldY++) {
+        // Remove the old compact fortress marker and its recognizable block palette.
+        for (int y = level.getMinY(); y < level.getMaxY(); y++) {
+            BlockPos oldMarker = new BlockPos(24, y, 24);
+            if (level.getBlockState(oldMarker).is(Blocks.BEACON)) {
+                level.setBlock(oldMarker, Blocks.AIR.defaultBlockState(), 3);
+            }
+        }
+        for (int y = Math.max(level.getMinY(), baseY - 12);
+             y <= Math.min(level.getMaxY() - 1, baseY + 52); y++) {
             for (int x = 3; x <= 45; x++) {
                 for (int z = 3; z <= 45; z++) {
-                    BlockPos oldPos = new BlockPos(x, oldY, z);
+                    BlockPos oldPos = new BlockPos(x, y, z);
                     BlockState oldState = level.getBlockState(oldPos);
                     if (oldState.is(Blocks.MOSSY_STONE_BRICKS)
                             || oldState.is(Blocks.MOSS_BLOCK)
@@ -355,123 +368,321 @@ public final class MultiversePortals {
             }
         }
 
-        // Level a large fortress footprint and clear enough vertical space for its towers.
-        for (int x = 3; x <= 45; x++) {
-            for (int z = 3; z <= 45; z++) {
-                level.setBlock(new BlockPos(x, baseY, z), foundation, 3);
-                for (int y = baseY + 1; y <= baseY + 27; y++) {
+        // Flatten a 73x73 citadel plateau and clear a generous build volume.
+        for (int x = 12; x <= 84; x++) {
+            for (int z = 12; z <= 84; z++) {
+                BlockState floor = ((x + z) % 9 == 0)
+                        ? trim : foundation;
+                if (x == 12 || x == 84 || z == 12 || z == 84) floor = trim;
+                level.setBlock(new BlockPos(x, baseY, z), floor, 3);
+                for (int y = baseY + 1; y <= baseY + 48; y++) {
                     level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
                 }
             }
         }
 
-        // Outer fortress walls with a guarded main gate.
-        for (int y = baseY + 1; y <= baseY + 10; y++) {
-            for (int p = 7; p <= 41; p++) {
-                if (p < 21 || p > 27) {
-                    level.setBlock(new BlockPos(p, y, 7), wall, 3);
+        // Deep outer foundation and a dark perimeter moat-ring.
+        for (int x = 9; x <= 87; x++) {
+            for (int z = 9; z <= 87; z++) {
+                if (x <= 11 || x >= 85 || z <= 11 || z >= 85) {
+                    level.setBlock(new BlockPos(x, baseY, z),
+                            Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(), 3);
                 }
-                level.setBlock(new BlockPos(p, y, 41), wall, 3);
-                level.setBlock(new BlockPos(7, y, p), wall, 3);
-                level.setBlock(new BlockPos(41, y, p), wall, 3);
             }
-        }
-        for (int p = 7; p <= 41; p++) {
-            if (p < 21 || p > 27) {
-                level.setBlock(new BlockPos(p, baseY + 11, 7), trim, 3);
-            }
-            level.setBlock(new BlockPos(p, baseY + 11, 41), trim, 3);
-            level.setBlock(new BlockPos(7, baseY + 11, p), trim, 3);
-            level.setBlock(new BlockPos(41, baseY + 11, p), trim, 3);
         }
 
-        // Four corner towers, each with a lit crown and battlements.
-        for (int cx : new int[]{7, 41}) {
-            for (int cz : new int[]{7, 41}) {
-                for (int y = baseY + 1; y <= baseY + 19; y++) {
-                    for (int dx = -3; dx <= 3; dx++) {
-                        for (int dz = -3; dz <= 3; dz++) {
-                            if (Math.abs(dx) == 3 || Math.abs(dz) == 3) {
+        // Main curtain wall: thick, walkable ramparts with regularly spaced merlons.
+        for (int y = baseY + 1; y <= baseY + 17; y++) {
+            for (int p = 18; p <= 78; p++) {
+                boolean gateOpening = p >= 43 && p <= 53;
+                if (!gateOpening) {
+                    for (int t = 0; t < 3; t++) {
+                        level.setBlock(new BlockPos(p, y, 18 + t), wall, 3);
+                    }
+                }
+                for (int t = 0; t < 3; t++) {
+                    level.setBlock(new BlockPos(p, y, 78 - t), wall, 3);
+                    level.setBlock(new BlockPos(18 + t, y, p), wall, 3);
+                    level.setBlock(new BlockPos(78 - t, y, p), wall, 3);
+                }
+            }
+        }
+        for (int p = 18; p <= 78; p++) {
+            for (int t = 0; t < 3; t++) {
+                level.setBlock(new BlockPos(p, baseY + 18, 18 + t), trim, 3);
+                level.setBlock(new BlockPos(p, baseY + 18, 78 - t), trim, 3);
+                level.setBlock(new BlockPos(18 + t, baseY + 18, p), trim, 3);
+                level.setBlock(new BlockPos(78 - t, baseY + 18, p), trim, 3);
+            }
+            if (p % 3 == 0) {
+                for (int t = 0; t < 3; t++) {
+                    if (p < 43 || p > 53) {
+                        level.setBlock(new BlockPos(p, baseY + 20, 18 + t), roof, 3);
+                    }
+                    level.setBlock(new BlockPos(p, baseY + 20, 78 - t), roof, 3);
+                    level.setBlock(new BlockPos(18 + t, baseY + 20, p), roof, 3);
+                    level.setBlock(new BlockPos(78 - t, baseY + 20, p), roof, 3);
+                }
+            }
+        }
+
+        // Four colossal corner bastions with layered crowns and glowing cores.
+        for (int cx : new int[]{18, 78}) {
+            for (int cz : new int[]{18, 78}) {
+                for (int y = baseY + 1; y <= baseY + 34; y++) {
+                    for (int dx = -6; dx <= 6; dx++) {
+                        for (int dz = -6; dz <= 6; dz++) {
+                            if (Math.max(Math.abs(dx), Math.abs(dz)) >= 4) {
                                 level.setBlock(new BlockPos(cx + dx, y, cz + dz), wall, 3);
                             }
                         }
                     }
                 }
-                for (int dx = -4; dx <= 4; dx++) {
-                    for (int dz = -4; dz <= 4; dz++) {
-                        if (Math.abs(dx) == 4 || Math.abs(dz) == 4) {
-                            level.setBlock(new BlockPos(cx + dx, baseY + 20, cz + dz), trim, 3);
+                for (int layer = 0; layer < 4; layer++) {
+                    int radius = 7 - layer;
+                    int yy = baseY + 35 + layer;
+                    for (int dx = -radius; dx <= radius; dx++) {
+                        for (int dz = -radius; dz <= radius; dz++) {
+                            if (Math.abs(dx) == radius || Math.abs(dz) == radius) {
+                                level.setBlock(new BlockPos(cx + dx, yy, cz + dz),
+                                        layer % 2 == 0 ? trim : roof, 3);
+                            }
                         }
                     }
                 }
-                level.setBlock(new BlockPos(cx, baseY + 19, cz), roof, 3);
+                for (int y = baseY + 27; y <= baseY + 34; y++) {
+                    level.setBlock(new BlockPos(cx, y, cz), Blocks.SEA_LANTERN.defaultBlockState(), 3);
+                }
+                for (int dx = -2; dx <= 2; dx++) {
+                    for (int dz = -2; dz <= 2; dz++) {
+                        if (Math.abs(dx) == 2 || Math.abs(dz) == 2) {
+                            level.setBlock(new BlockPos(cx + dx, baseY + 39, cz + dz), trim, 3);
+                        }
+                    }
+                }
             }
         }
 
-        // Central keep and its high command tower.
-        for (int y = baseY + 1; y <= baseY + 16; y++) {
-            for (int p = 17; p <= 31; p++) {
-                level.setBlock(new BlockPos(p, y, 17), wall, 3);
-                level.setBlock(new BlockPos(p, y, 31), wall, 3);
-                level.setBlock(new BlockPos(17, y, p), wall, 3);
-                level.setBlock(new BlockPos(31, y, p), wall, 3);
+        // Gatehouse: twin keeps, a monumental arch and a raised portcullis.
+        for (int side : new int[]{40, 56}) {
+            for (int y = baseY + 1; y <= baseY + 27; y++) {
+                for (int dx = -3; dx <= 3; dx++) {
+                    for (int dz = -3; dz <= 3; dz++) {
+                        if (Math.abs(dx) >= 2 || Math.abs(dz) >= 2) {
+                            level.setBlock(new BlockPos(side + dx, y, 18 + dz), wall, 3);
+                        }
+                    }
+                }
+                level.setBlock(new BlockPos(side, y, 18), trim, 3);
+            }
+            for (int dx = -4; dx <= 4; dx++) {
+                for (int dz = -4; dz <= 4; dz++) {
+                    if (Math.abs(dx) == 4 || Math.abs(dz) == 4) {
+                        level.setBlock(new BlockPos(side + dx, baseY + 28, 18 + dz), trim, 3);
+                    }
+                }
             }
         }
-        for (int x = 20; x <= 28; x++) {
-            for (int z = 20; z <= 28; z++) {
-                level.setBlock(new BlockPos(x, baseY + 1, z), trim, 3);
+        for (int y = baseY + 1; y <= baseY + 20; y++) {
+            for (int x = 43; x <= 53; x++) {
+                if (x <= 44 || x >= 52 || y >= baseY + 15) {
+                    level.setBlock(new BlockPos(x, y, 18), trim, 3);
+                }
             }
         }
-        for (int y = baseY + 17; y <= baseY + 24; y++) {
-            for (int p = 20; p <= 28; p++) {
-                level.setBlock(new BlockPos(p, y, 20), wall, 3);
-                level.setBlock(new BlockPos(p, y, 28), wall, 3);
-                level.setBlock(new BlockPos(20, y, p), wall, 3);
-                level.setBlock(new BlockPos(28, y, p), wall, 3);
+        for (int x = 44; x <= 52; x++) {
+            for (int y = baseY + 2; y <= baseY + 14; y++) {
+                if ((x + y) % 2 == 0) {
+                    level.setBlock(new BlockPos(x, y, 18), Blocks.IRON_BARS.defaultBlockState(), 3);
+                }
             }
         }
-        for (int p = 19; p <= 29; p++) {
-            level.setBlock(new BlockPos(p, baseY + 25, 19), trim, 3);
-            level.setBlock(new BlockPos(p, baseY + 25, 29), trim, 3);
-            level.setBlock(new BlockPos(19, baseY + 25, p), trim, 3);
-            level.setBlock(new BlockPos(29, baseY + 25, p), trim, 3);
-        }
-        level.setBlock(marker, Blocks.BEACON.defaultBlockState(), 3);
 
-        // Realm champions and guards defend the stronghold.
-        spawnDefender(level, EntityType.VINDICATOR, "Realm Champion", 24, 13,
-                new ItemStack(Items.DIAMOND_AXE));
-        spawnDefender(level, EntityType.VINDICATOR, "Royal Sentinel", 13, 24,
-                new ItemStack(Items.IRON_AXE));
-        spawnDefender(level, EntityType.VINDICATOR, "Royal Sentinel", 35, 24,
-                new ItemStack(Items.IRON_AXE));
-        spawnDefender(level, EntityType.PILLAGER, "Realm Marksman", 24, 36,
-                new ItemStack(Items.CROSSBOW));
-        spawnDefender(level, EntityType.PILLAGER, "Realm Marksman", 36, 36,
-                new ItemStack(Items.CROSSBOW));
-        spawnDefender(level, EntityType.EVOKER, "Realm Arcanist", 12, 36, ItemStack.EMPTY);
+        // Elevated processional bridge connects the arrival portal to the fortress gate.
+        int arrivalY = Math.max(level.getMinY() + 8, level.getHeight(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                0, 0) - 1);
+        for (int step = 0; step <= 40; step++) {
+            int x = 8 + step;
+            int z = 8 + (step * 10 / 40);
+            int y = arrivalY + (baseY - arrivalY) * step / 40;
+            for (int width = -3; width <= 3; width++) {
+                level.setBlock(new BlockPos(x, y, z + width),
+                        width == -3 || width == 3 ? trim : foundation, 3);
+                if (width == -3 || width == 3) {
+                    level.setBlock(new BlockPos(x, y + 1, z + width),
+                            Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+                }
+            }
+            if (step % 5 == 0) {
+                for (int width : new int[]{-4, 4}) {
+                    for (int pillarY = y - 1; pillarY >= Math.max(level.getMinY() + 1, y - 8); pillarY--) {
+                        level.setBlock(new BlockPos(x, pillarY, z + width),
+                                Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(), 3);
+                    }
+                    level.setBlock(new BlockPos(x, y + 1, z + width),
+                            Blocks.SEA_LANTERN.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // Inner courtyard: concentric command dais, four obelisks and a central power seal.
+        for (int x = 31; x <= 65; x++) {
+            for (int z = 31; z <= 65; z++) {
+                int dx = x - 48;
+                int dz = z - 48;
+                int distance = Math.max(Math.abs(dx), Math.abs(dz));
+                if (distance == 15 || distance == 14) {
+                    level.setBlock(new BlockPos(x, baseY + 1, z), trim, 3);
+                } else if (distance == 10 || distance == 9) {
+                    level.setBlock(new BlockPos(x, baseY + 1, z), roof, 3);
+                }
+            }
+        }
+        for (int[] point : new int[][]{{32,32},{64,32},{32,64},{64,64}}) {
+            for (int y = baseY + 1; y <= baseY + 22; y++) {
+                level.setBlock(new BlockPos(point[0], y, point[1]), trim, 3);
+                if (y % 3 == 0) {
+                    level.setBlock(new BlockPos(point[0] + 1, y, point[1]), roof, 3);
+                }
+            }
+            level.setBlock(new BlockPos(point[0], baseY + 23, point[1]),
+                    Blocks.SEA_LANTERN.defaultBlockState(), 3);
+        }
+
+        // Central royal keep: layered hall, buttresses, roof terraces and a 46-block spire.
+        for (int y = baseY + 1; y <= baseY + 29; y++) {
+            for (int p = 35; p <= 61; p++) {
+                level.setBlock(new BlockPos(p, y, 35), wall, 3);
+                level.setBlock(new BlockPos(p, y, 61), wall, 3);
+                level.setBlock(new BlockPos(35, y, p), wall, 3);
+                level.setBlock(new BlockPos(61, y, p), wall, 3);
+            }
+        }
+        for (int y = baseY + 2; y <= baseY + 27; y++) {
+            for (int p : new int[]{38, 58}) {
+                level.setBlock(new BlockPos(p, y, 35), trim, 3);
+                level.setBlock(new BlockPos(p, y, 61), trim, 3);
+                level.setBlock(new BlockPos(35, y, p), trim, 3);
+                level.setBlock(new BlockPos(61, y, p), trim, 3);
+            }
+        }
+        for (int layer = 0; layer < 6; layer++) {
+            int radius = 15 - layer * 2;
+            int yy = baseY + 30 + layer;
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.abs(dx) == radius || Math.abs(dz) == radius) {
+                        level.setBlock(new BlockPos(48 + dx, yy, 48 + dz),
+                                layer % 2 == 0 ? trim : roof, 3);
+                    }
+                }
+            }
+        }
+        for (int y = baseY + 36; y <= baseY + 46; y++) {
+            int radius = Math.max(1, 5 - (y - (baseY + 36)) / 2);
+            for (int dx = -radius; dx <= radius; dx++) {
+                for (int dz = -radius; dz <= radius; dz++) {
+                    if (Math.abs(dx) == radius || Math.abs(dz) == radius) {
+                        level.setBlock(new BlockPos(48 + dx, y, 48 + dz), trim, 3);
+                    }
+                }
+            }
+            if (y % 2 == 0) {
+                level.setBlock(new BlockPos(48, y, 48), roof, 3);
+            }
+        }
+        level.setBlock(new BlockPos(48, baseY + 47, 48), Blocks.BEACON.defaultBlockState(), 3);
+
+        // Throne platform and throne visible through the keep's central hall.
+        for (int x = 43; x <= 53; x++) {
+            for (int z = 43; z <= 53; z++) {
+                level.setBlock(new BlockPos(x, baseY + 2, z), trim, 3);
+            }
+        }
+        for (int y = baseY + 3; y <= baseY + 10; y++) {
+            level.setBlock(new BlockPos(48, y, 51), roof, 3);
+            level.setBlock(new BlockPos(48, y, 52), trim, 3);
+            level.setBlock(new BlockPos(47, y, 52), trim, 3);
+            level.setBlock(new BlockPos(49, y, 52), trim, 3);
+        }
+        for (int x = 45; x <= 51; x++) {
+            level.setBlock(new BlockPos(x, baseY + 11, 52), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+        }
+
+        // Realm champions are deliberately formidable and have different combat roles.
+        spawnElite(level, EntityType.RAVAGER, "THE COLOSSUS - Siege Beast",
+                48, 28, ItemStack.EMPTY, 520.0D, 34.0D, 24.0D, 0.34D, 1);
+        spawnElite(level, EntityType.VINDICATOR, "THE VOID WARLORD",
+                43, 34, new ItemStack(Items.NETHERITE_AXE), 260.0D, 32.0D, 22.0D, 0.42D, 2);
+        spawnElite(level, EntityType.EVOKER, "THE RIFT ARCANIST",
+                53, 34, ItemStack.EMPTY, 220.0D, 18.0D, 18.0D, 0.34D, 1);
+        spawnElite(level, EntityType.PILLAGER, "THE DREAD MARKSMAN",
+                38, 48, new ItemStack(Items.CROSSBOW), 190.0D, 24.0D, 18.0D, 0.36D, 1);
+        spawnElite(level, EntityType.WITHER_SKELETON, "THE INFERNAL REAPER",
+                58, 48, new ItemStack(Items.NETHERITE_SWORD), 300.0D, 34.0D, 24.0D, 0.40D, 2);
+        spawnElite(level, EntityType.PIGLIN_BRUTE, "THE BLACK IRON EXECUTIONER",
+                43, 58, new ItemStack(Items.NETHERITE_AXE), 340.0D, 36.0D, 26.0D, 0.38D, 2);
+        spawnElite(level, EntityType.WITCH, "THE PLAGUE SORCERESS",
+                53, 58, ItemStack.EMPTY, 210.0D, 18.0D, 16.0D, 0.34D, 1);
+        spawnElite(level, EntityType.BLAZE, "THE STARFIRE DESTROYER",
+                48, 68, ItemStack.EMPTY, 240.0D, 26.0D, 18.0D, 0.36D, 1);
+
+        level.playSound(null, new BlockPos(48, baseY + 24, 48),
+                SoundEvents.WITHER_SPAWN, SoundSource.HOSTILE, 2.0F, 0.65F);
     }
 
-    private static void spawnDefender(
+    private static void spawnElite(
             ServerLevel level, EntityType<? extends Mob> type, String name,
-            int x, int z, ItemStack weapon
+            int x, int z, ItemStack weapon, double health, double damage,
+            double armor, double speed, int strengthAmplifier
     ) {
         Mob mob = type.create(level, EntitySpawnReason.COMMAND);
-        if (mob == null) {
-            return;
-        }
-        int y = level.getHeight(
-                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
-        mob.setPos(x + 0.5D, y, z + 0.5D);
+        if (mob == null) return;
+
+        setEliteAttribute(mob, Attributes.MAX_HEALTH, health);
+        setEliteAttribute(mob, Attributes.ATTACK_DAMAGE, damage);
+        setEliteAttribute(mob, Attributes.ARMOR, armor);
+        setEliteAttribute(mob, Attributes.MOVEMENT_SPEED, speed);
+        setEliteAttribute(mob, Attributes.KNOCKBACK_RESISTANCE, 0.85D);
+        setEliteAttribute(mob, Attributes.FOLLOW_RANGE, 72.0D);
+        mob.setHealth((float) health);
+        mob.setPos(x + 0.5D, level.getHeight(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                x, z), z + 0.5D);
         mob.setCustomName(net.minecraft.network.chat.Component.literal(name));
         mob.setCustomNameVisible(true);
         mob.setPersistenceRequired();
+
         if (!weapon.isEmpty()) {
             mob.setItemSlot(EquipmentSlot.MAINHAND, weapon);
         }
-        mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
-        mob.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.IRON_CHESTPLATE));
-        mob.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.IRON_LEGGINGS));
+        mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.NETHERITE_HELMET));
+        mob.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.NETHERITE_CHESTPLATE));
+        mob.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.NETHERITE_LEGGINGS));
+        mob.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.NETHERITE_BOOTS));
+
+        mob.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 20 * 60 * 30,
+                strengthAmplifier, false, true, true));
+        mob.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 20 * 60 * 30,
+                1, false, true, true));
+        mob.addEffect(new MobEffectInstance(MobEffects.SPEED, 20 * 60 * 30,
+                1, false, true, true));
+        mob.addEffect(new MobEffectInstance(MobEffects.REGENERATION, 20 * 60 * 30,
+                1, false, true, true));
+        mob.addEffect(new MobEffectInstance(MobEffects.FIRE_RESISTANCE, 20 * 60 * 30,
+                0, false, true, true));
+        level.addFreshEntity(mob);
+    }
+
+    private static void setEliteAttribute(Mob mob,
+            net.minecraft.core.Holder<net.minecraft.world.entity.ai.attributes.Attribute> attribute,
+            double value) {
+        var instance = mob.getAttribute(attribute);
+        if (instance != null) instance.setBaseValue(value);
+    }
+
+, new ItemStack(Items.IRON_LEGGINGS));
         mob.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.IRON_BOOTS));
         level.addFreshEntity(mob);
     }
