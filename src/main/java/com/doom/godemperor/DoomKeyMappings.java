@@ -1,4 +1,3 @@
-
 package com.doom.godemperor;
 
 import com.mojang.blaze3d.platform.InputConstants;
@@ -27,39 +26,21 @@ public class DoomKeyMappings {
                     )
             );
 
-    // Skill tree
-
     public static final KeyMapping OPEN_SKILL_TREE =
             key("open_skill_tree", GLFW.GLFW_KEY_K);
 
-    // Default ability-slot controls
+    public static final KeyMapping OPEN_MULTIVERSE_HUB =
+            key("open_multiverse_hub", GLFW.GLFW_KEY_H);
 
-    public static final KeyMapping SLOT_1 =
-            key("slot_1", GLFW.GLFW_KEY_Z);
-
-    public static final KeyMapping SLOT_2 =
-            key("slot_2", GLFW.GLFW_KEY_X);
-
-    public static final KeyMapping SLOT_3 =
-            key("slot_3", GLFW.GLFW_KEY_C);
-
-    public static final KeyMapping SLOT_4 =
-            key("slot_4", GLFW.GLFW_KEY_V);
-
-    public static final KeyMapping SLOT_5 =
-            key("slot_5", GLFW.GLFW_KEY_F);
-
-    public static final KeyMapping SLOT_6 =
-            key("slot_6", GLFW.GLFW_KEY_R);
-
-    public static final KeyMapping SLOT_7 =
-            key("slot_7", GLFW.GLFW_KEY_Q);
-
-    public static final KeyMapping SLOT_8 =
-            mouse("slot_8", GLFW.GLFW_MOUSE_BUTTON_4);
-
-    public static final KeyMapping SLOT_9 =
-            mouse("slot_9", GLFW.GLFW_MOUSE_BUTTON_5);
+    public static final KeyMapping SLOT_1 = key("slot_1", GLFW.GLFW_KEY_Z);
+    public static final KeyMapping SLOT_2 = key("slot_2", GLFW.GLFW_KEY_X);
+    public static final KeyMapping SLOT_3 = key("slot_3", GLFW.GLFW_KEY_C);
+    public static final KeyMapping SLOT_4 = key("slot_4", GLFW.GLFW_KEY_V);
+    public static final KeyMapping SLOT_5 = key("slot_5", GLFW.GLFW_KEY_F);
+    public static final KeyMapping SLOT_6 = key("slot_6", GLFW.GLFW_KEY_R);
+    public static final KeyMapping SLOT_7 = key("slot_7", GLFW.GLFW_KEY_Q);
+    public static final KeyMapping SLOT_8 = mouse("slot_8", GLFW.GLFW_MOUSE_BUTTON_4);
+    public static final KeyMapping SLOT_9 = mouse("slot_9", GLFW.GLFW_MOUSE_BUTTON_5);
 
     private static KeyMapping key(String name, int code) {
         return new KeyMapping(
@@ -82,9 +63,8 @@ public class DoomKeyMappings {
     @SubscribeEvent
     public static void register(RegisterKeyMappingsEvent event) {
         event.registerCategory(CATEGORY);
-
         event.register(OPEN_SKILL_TREE);
-
+        event.register(OPEN_MULTIVERSE_HUB);
         event.register(SLOT_1);
         event.register(SLOT_2);
         event.register(SLOT_3);
