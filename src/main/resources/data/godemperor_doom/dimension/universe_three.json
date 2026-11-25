@@ -1,30 +1,11 @@
 {
   "type": "minecraft:overworld",
   "generator": {
-    "type": "minecraft:flat",
-    "settings": {
-      "biome": "minecraft:end_highlands",
-      "features": false,
-      "lakes": false,
-      "layers": [
-        {
-          "block": "minecraft:bedrock",
-          "height": 1
-        },
-        {
-          "block": "minecraft:end_stone",
-          "height": 4
-        },
-        {
-          "block": "minecraft:purpur_block",
-          "height": 3
-        },
-        {
-          "block": "minecraft:end_stone",
-          "height": 1
-        }
-      ],
-      "structure_overrides": []
+    "type": "minecraft:noise",
+    "settings": "minecraft:overworld",
+    "biome_source": {
+      "type": "minecraft:fixed",
+      "biome": "minecraft:end_highlands"
     }
   }
 }
