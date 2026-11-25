@@ -10,11 +10,13 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
-import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.equipment.ArmorMaterial;
 import net.minecraft.world.item.equipment.ArmorType;
 import net.minecraft.world.item.equipment.EquipmentAsset;
@@ -40,18 +42,13 @@ public class GodEmperorDoom {
 
     public static final String MOD_ID = "godemperor_doom";
 
-    // ==========================================
     // REGISTRIES
-    // ==========================================
 
     public static final DeferredRegister.Items ITEMS =
             DeferredRegister.createItems(MOD_ID);
 
     public static final DeferredRegister<CreativeModeTab> TABS =
-            DeferredRegister.create(
-                    Registries.CREATIVE_MODE_TAB,
-                    MOD_ID
-            );
+            DeferredRegister.create(Registries.CREATIVE_MODE_TAB, MOD_ID);
 
     public static final DeferredRegister<AttachmentType<?>> ATTACHMENTS =
             DeferredRegister.create(
@@ -59,9 +56,35 @@ public class GodEmperorDoom {
                     MOD_ID
             );
 
-    // ==========================================
-    // DOCTOR DOOM - DIAMOND ARMOR
-    // ==========================================
+    // CUSTOM REPAIR TAGS
+
+    public static final TagKey<Item> REPAIRS_LATVERIAN_ARMOR =
+            TagKey.create(
+                    Registries.ITEM,
+                    Identifier.fromNamespaceAndPath(
+                            MOD_ID,
+                            "repairs_latverian_armor"
+                    )
+            );
+
+    public static final TagKey<Item> REPAIRS_BEYONDER_ARMOR =
+            TagKey.create(
+                    Registries.ITEM,
+                    Identifier.fromNamespaceAndPath(
+                            MOD_ID,
+                            "repairs_beyonder_armor"
+                    )
+            );
+
+    // CUSTOM INGOTS
+
+    public static final DeferredItem<Item> LATVERIAN_STEEL_INGOT =
+            ITEMS.registerSimpleItem("latverian_steel_ingot");
+
+    public static final DeferredItem<Item> BEYONDER_INGOT =
+            ITEMS.registerSimpleItem("beyonder_ingot");
+
+    // DOCTOR DOOM ARMOR
 
     public static final ResourceKey<EquipmentAsset> DOOM_ARMOR_ASSET =
             ResourceKey.create(
@@ -82,13 +105,11 @@ public class GodEmperorDoom {
                     SoundEvents.ARMOR_EQUIP_DIAMOND,
                     2.0F,
                     0.0F,
-                    ItemTags.REPAIRS_DIAMOND_ARMOR,
+                    REPAIRS_LATVERIAN_ARMOR,
                     DOOM_ARMOR_ASSET
             );
 
-    // ==========================================
-    // GOD EMPEROR DOOM - NETHERITE ARMOR
-    // ==========================================
+    // GOD EMPEROR DOOM ARMOR
 
     public static final ResourceKey<EquipmentAsset> GOD_EMPEROR_ARMOR_ASSET =
             ResourceKey.create(
@@ -98,163 +119,132 @@ public class GodEmperorDoom {
 
     public static final ArmorMaterial GOD_EMPEROR_ARMOR_MATERIAL =
             new ArmorMaterial(
-                    37,
+                    41,
                     Map.of(
-                            ArmorType.HELMET, 3,
-                            ArmorType.CHESTPLATE, 8,
-                            ArmorType.LEGGINGS, 6,
-                            ArmorType.BOOTS, 3
+                            ArmorType.HELMET, 4,
+                            ArmorType.CHESTPLATE, 9,
+                            ArmorType.LEGGINGS, 7,
+                            ArmorType.BOOTS, 4
                     ),
-                    15,
+                    20,
                     SoundEvents.ARMOR_EQUIP_NETHERITE,
-                    3.0F,
-                    0.1F,
-                    ItemTags.REPAIRS_NETHERITE_ARMOR,
+                    3.5F,
+                    0.2F,
+                    REPAIRS_BEYONDER_ARMOR,
                     GOD_EMPEROR_ARMOR_ASSET
             );
 
-    // ==========================================
     // DOOM SIGIL
-    // ==========================================
 
     public static final DeferredItem<Item> DOOM_SIGIL =
             ITEMS.registerSimpleItem("doom_sigil");
 
-    // ==========================================
     // DOCTOR DOOM ARMOR ITEMS
-    // ==========================================
 
     public static final DeferredItem<Item> DOOM_HELMET =
             ITEMS.registerItem(
                     "doom_helmet",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    DOOM_ARMOR_MATERIAL,
-                                    ArmorType.HELMET
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            DOOM_ARMOR_MATERIAL,
+                            ArmorType.HELMET
+                    ))
             );
 
     public static final DeferredItem<Item> DOOM_CHESTPLATE =
             ITEMS.registerItem(
                     "doom_chestplate",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    DOOM_ARMOR_MATERIAL,
-                                    ArmorType.CHESTPLATE
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            DOOM_ARMOR_MATERIAL,
+                            ArmorType.CHESTPLATE
+                    ))
             );
 
     public static final DeferredItem<Item> DOOM_LEGGINGS =
             ITEMS.registerItem(
                     "doom_leggings",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    DOOM_ARMOR_MATERIAL,
-                                    ArmorType.LEGGINGS
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            DOOM_ARMOR_MATERIAL,
+                            ArmorType.LEGGINGS
+                    ))
             );
 
     public static final DeferredItem<Item> DOOM_BOOTS =
             ITEMS.registerItem(
                     "doom_boots",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    DOOM_ARMOR_MATERIAL,
-                                    ArmorType.BOOTS
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            DOOM_ARMOR_MATERIAL,
+                            ArmorType.BOOTS
+                    ))
             );
 
-    // ==========================================
     // GOD EMPEROR DOOM ARMOR ITEMS
-    // ==========================================
 
     public static final DeferredItem<Item> GOD_HELMET =
             ITEMS.registerItem(
                     "god_helmet",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    GOD_EMPEROR_ARMOR_MATERIAL,
-                                    ArmorType.HELMET
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            GOD_EMPEROR_ARMOR_MATERIAL,
+                            ArmorType.HELMET
+                    ))
             );
 
     public static final DeferredItem<Item> GOD_CHESTPLATE =
             ITEMS.registerItem(
                     "god_chestplate",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    GOD_EMPEROR_ARMOR_MATERIAL,
-                                    ArmorType.CHESTPLATE
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            GOD_EMPEROR_ARMOR_MATERIAL,
+                            ArmorType.CHESTPLATE
+                    ))
             );
 
     public static final DeferredItem<Item> GOD_LEGGINGS =
             ITEMS.registerItem(
                     "god_leggings",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    GOD_EMPEROR_ARMOR_MATERIAL,
-                                    ArmorType.LEGGINGS
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            GOD_EMPEROR_ARMOR_MATERIAL,
+                            ArmorType.LEGGINGS
+                    ))
             );
 
     public static final DeferredItem<Item> GOD_BOOTS =
             ITEMS.registerItem(
                     "god_boots",
-                    p -> new Item(
-                            p.humanoidArmor(
-                                    GOD_EMPEROR_ARMOR_MATERIAL,
-                                    ArmorType.BOOTS
-                            )
-                    )
+                    p -> new Item(p.humanoidArmor(
+                            GOD_EMPEROR_ARMOR_MATERIAL,
+                            ArmorType.BOOTS
+                    ))
             );
 
-    // ==========================================
     // CREATIVE TAB
-    // ==========================================
 
     public static final Supplier<CreativeModeTab> DOOM_TAB =
             TABS.register(
                     "godemperor_doom",
                     () -> CreativeModeTab.builder()
-                            .title(
-                                    Component.translatable(
-                                            "itemGroup.godemperor_doom"
-                                    )
-                            )
-                            .icon(
-                                    () -> DOOM_SIGIL.get().getDefaultInstance()
-                            )
+                            .title(Component.translatable(
+                                    "itemGroup.godemperor_doom"
+                            ))
+                            .icon(() -> DOOM_SIGIL.get().getDefaultInstance())
                             .displayItems((parameters, output) -> {
-
                                 output.accept(DOOM_SIGIL.get());
 
-                                // Doctor Doom
+                                output.accept(LATVERIAN_STEEL_INGOT.get());
+                                output.accept(BEYONDER_INGOT.get());
+
                                 output.accept(DOOM_HELMET.get());
                                 output.accept(DOOM_CHESTPLATE.get());
                                 output.accept(DOOM_LEGGINGS.get());
                                 output.accept(DOOM_BOOTS.get());
 
-                                // God Emperor Doom
                                 output.accept(GOD_HELMET.get());
                                 output.accept(GOD_CHESTPLATE.get());
                                 output.accept(GOD_LEGGINGS.get());
                                 output.accept(GOD_BOOTS.get());
-
                             })
                             .build()
             );
 
-    // ==========================================
     // PLAYER DATA
-    // ==========================================
 
     public record DoomPlayerData(
             int energy,
@@ -262,7 +252,6 @@ public class GodEmperorDoom {
             long aegisReadyAt,
             long surgeReadyAt
     ) {
-
         public static final MapCodec<DoomPlayerData> CODEC =
                 RecordCodecBuilder.mapCodec(instance ->
                         instance.group(
@@ -281,7 +270,6 @@ public class GodEmperorDoom {
                                 com.mojang.serialization.Codec.LONG
                                         .fieldOf("surge_ready_at")
                                         .forGetter(DoomPlayerData::surgeReadyAt)
-
                         ).apply(instance, DoomPlayerData::new)
                 );
     }
@@ -290,24 +278,16 @@ public class GodEmperorDoom {
             ATTACHMENTS.register(
                     "player_data",
                     () -> AttachmentType.builder(
-                            () -> new DoomPlayerData(
-                                    100,
-                                    false,
-                                    0,
-                                    0
-                            )
+                            () -> new DoomPlayerData(100, false, 0, 0)
                     )
                             .serialize(DoomPlayerData.CODEC)
                             .copyOnDeath()
                             .build()
             );
 
-    // ==========================================
-    // MOD INITIALIZATION
-    // ==========================================
+    // INITIALIZATION
 
     public GodEmperorDoom(IEventBus modBus) {
-
         ITEMS.register(modBus);
         TABS.register(modBus);
         ATTACHMENTS.register(modBus);
@@ -316,12 +296,33 @@ public class GodEmperorDoom {
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
     }
 
-    // ==========================================
-    // ENERGY REGENERATION
-    // ==========================================
+    // FULL ARMOR SET CHECKS
+
+    private boolean hasDoctorDoomSet(ServerPlayer player) {
+        return player.getItemBySlot(EquipmentSlot.HEAD)
+                        .is(DOOM_HELMET.get())
+                && player.getItemBySlot(EquipmentSlot.CHEST)
+                        .is(DOOM_CHESTPLATE.get())
+                && player.getItemBySlot(EquipmentSlot.LEGS)
+                        .is(DOOM_LEGGINGS.get())
+                && player.getItemBySlot(EquipmentSlot.FEET)
+                        .is(DOOM_BOOTS.get());
+    }
+
+    private boolean hasGodEmperorSet(ServerPlayer player) {
+        return player.getItemBySlot(EquipmentSlot.HEAD)
+                        .is(GOD_HELMET.get())
+                && player.getItemBySlot(EquipmentSlot.CHEST)
+                        .is(GOD_CHESTPLATE.get())
+                && player.getItemBySlot(EquipmentSlot.LEGS)
+                        .is(GOD_LEGGINGS.get())
+                && player.getItemBySlot(EquipmentSlot.FEET)
+                        .is(GOD_BOOTS.get());
+    }
+
+    // PLAYER TICK: ENERGY AND ARMOR BONUSES
 
     private void onPlayerTick(PlayerTickEvent.Post event) {
-
         if (event.getEntity().level().isClientSide()) {
             return;
         }
@@ -336,12 +337,69 @@ public class GodEmperorDoom {
 
         DoomPlayerData data = player.getData(PLAYER_DATA);
 
-        if (data.energy() < 100) {
+        boolean doctorSet = hasDoctorDoomSet(player);
+        boolean emperorSet = hasGodEmperorSet(player);
 
+        int energyGain = 1;
+
+        if (doctorSet) {
+            energyGain = 2;
+
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.RESISTANCE,
+                    45,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.SPEED,
+                    45,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        }
+
+        if (emperorSet) {
+            energyGain = 3;
+
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.RESISTANCE,
+                    45,
+                    1,
+                    false,
+                    false,
+                    true
+            ));
+
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.SPEED,
+                    45,
+                    1,
+                    false,
+                    false,
+                    true
+            ));
+
+            player.addEffect(new MobEffectInstance(
+                    MobEffects.REGENERATION,
+                    45,
+                    0,
+                    false,
+                    false,
+                    true
+            ));
+        }
+
+        if (data.energy() < 100) {
             player.setData(
                     PLAYER_DATA,
                     new DoomPlayerData(
-                            Math.min(100, data.energy() + 1),
+                            Math.min(100, data.energy() + energyGain),
                             data.awakened(),
                             data.aegisReadyAt(),
                             data.surgeReadyAt()
@@ -350,19 +408,24 @@ public class GodEmperorDoom {
         }
     }
 
-    // ==========================================
+    // BEYONDER BOSS REWARD
+    // Call this when the Beyonder boss is defeated.
+    // The boss entity and its defeat event are not implemented yet.
+
+    public static void rewardBeyonderDefeat(ServerPlayer player) {
+        player.getInventory().add(
+                new ItemStack(BEYONDER_INGOT.get(), 24)
+        );
+    }
+
     // COMMANDS
-    // ==========================================
 
     private void registerCommands(RegisterCommandsEvent event) {
-
         event.getDispatcher().register(
                 Commands.literal("doom")
 
-                        // STATUS
                         .then(Commands.literal("status")
                                 .executes(context -> {
-
                                     ServerPlayer player =
                                             context.getSource()
                                                     .getPlayerOrException();
@@ -384,10 +447,8 @@ public class GodEmperorDoom {
                                 })
                         )
 
-                        // AWAKEN
                         .then(Commands.literal("awaken")
                                 .executes(context -> {
-
                                     ServerPlayer player =
                                             context.getSource()
                                                     .getPlayerOrException();
@@ -396,13 +457,11 @@ public class GodEmperorDoom {
                                             player.getData(PLAYER_DATA);
 
                                     if (data.awakened()) {
-
                                         context.getSource().sendFailure(
                                                 Component.literal(
                                                         "Doom is already awakened."
                                                 )
                                         );
-
                                         return 0;
                                     }
 
@@ -427,10 +486,8 @@ public class GodEmperorDoom {
                                 })
                         )
 
-                        // AEGIS
                         .then(Commands.literal("aegis")
                                 .executes(context -> {
-
                                     ServerPlayer player =
                                             context.getSource()
                                                     .getPlayerOrException();
@@ -442,24 +499,20 @@ public class GodEmperorDoom {
                                             player.level().getGameTime();
 
                                     if (data.energy() < 30) {
-
                                         context.getSource().sendFailure(
                                                 Component.literal(
                                                         "Not enough Doom Energy."
                                                 )
                                         );
-
                                         return 0;
                                     }
 
                                     if (now < data.aegisReadyAt()) {
-
                                         context.getSource().sendFailure(
                                                 Component.literal(
                                                         "Aegis is still recharging."
                                                 )
                                         );
-
                                         return 0;
                                     }
 
@@ -492,10 +545,8 @@ public class GodEmperorDoom {
                                 })
                         )
 
-                        // SURGE
                         .then(Commands.literal("surge")
                                 .executes(context -> {
-
                                     ServerPlayer player =
                                             context.getSource()
                                                     .getPlayerOrException();
@@ -507,24 +558,20 @@ public class GodEmperorDoom {
                                             player.level().getGameTime();
 
                                     if (data.energy() < 20) {
-
                                         context.getSource().sendFailure(
                                                 Component.literal(
                                                         "Not enough Doom Energy."
                                                 )
                                         );
-
                                         return 0;
                                     }
 
                                     if (now < data.surgeReadyAt()) {
-
                                         context.getSource().sendFailure(
                                                 Component.literal(
                                                         "Surge is still recharging."
                                                 )
                                         );
-
                                         return 0;
                                     }
 
