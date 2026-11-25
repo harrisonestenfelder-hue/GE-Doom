@@ -166,8 +166,27 @@ public final class MultiversePortals {
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
         int floorY = Math.max(8, surfaceY - 1);
         BlockPos marker = new BlockPos(0, floorY + 12, 0);
-        if (level.getBlockState(marker).is(Blocks.SEA_LANTERN)) {
+        if (level.getBlockState(marker).is(Blocks.BEACON)) {
             return floorY;
+        }
+
+        // Remove the earlier Y=8 gateway if it was created before terrain generation.
+        BlockPos legacyMarker = new BlockPos(0, 20, 0);
+        if (level.getBlockState(legacyMarker).is(Blocks.SEA_LANTERN)) {
+            for (int x = -8; x <= 8; x++) {
+                for (int z = -8; z <= 8; z++) {
+                    for (int y = 8; y <= 20; y++) {
+                        BlockPos oldPos = new BlockPos(x, y, z);
+                        BlockState oldState = level.getBlockState(oldPos);
+                        if (oldState.is(Blocks.PURPUR_BLOCK)
+                                || oldState.is(Blocks.QUARTZ_PILLAR)
+                                || oldState.is(Blocks.GOLD_BLOCK)
+                                || oldState.is(Blocks.SEA_LANTERN)) {
+                            level.setBlock(oldPos, Blocks.AIR.defaultBlockState(), 3);
+                        }
+                    }
+                }
+            }
         }
 
         BlockState floor = Blocks.PURPUR_BLOCK.defaultBlockState();
@@ -196,7 +215,7 @@ public final class MultiversePortals {
             level.setBlock(new BlockPos(x, floorY, -8), trim, 3);
             level.setBlock(new BlockPos(x, floorY, 8), trim, 3);
         }
-        level.setBlock(marker, Blocks.SEA_LANTERN.defaultBlockState(), 3);
+        level.setBlock(marker, Blocks.BEACON.defaultBlockState(), 3);
         return floorY;
     }
 
