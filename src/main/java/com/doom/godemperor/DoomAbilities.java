@@ -291,7 +291,6 @@ public final class DoomAbilities {
         );
 
         player.setDeltaMovement(movement);
-        player.hasImpulse = true;
 
         player.level().sendParticles(
                 ParticleTypes.CLOUD,
