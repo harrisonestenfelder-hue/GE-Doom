@@ -128,7 +128,7 @@ public final class MultiverseHub {
     private static void buildHubIfNeeded(ServerLevel level) {
         BlockPos marker = new BlockPos(0, FLOOR_Y, 0);
         BlockPos generationMarker = new BlockPos(0, FLOOR_Y - 1, 0);
-        if (level.getBlockState(generationMarker).is(Blocks.EMERALD_BLOCK)) {
+        if (level.getBlockState(generationMarker).is(Blocks.DIAMOND_BLOCK)) {
             return;
         }
 
@@ -277,7 +277,7 @@ public final class MultiverseHub {
         buildFloorRing(level, 5, silverTrim, 0);
         buildFloorRing(level, 3, gold, 0);
         put(level, marker, gold);
-        put(level, generationMarker, Blocks.EMERALD_BLOCK.defaultBlockState());
+        put(level, generationMarker, Blocks.DIAMOND_BLOCK.defaultBlockState());
         put(level, new BlockPos(0, FLOOR_Y + 1, 0), light);
         for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 5; y++) {
             put(level, new BlockPos(-1, y, 0), glass);
