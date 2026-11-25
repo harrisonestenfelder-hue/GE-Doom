@@ -179,7 +179,10 @@ public final class MultiversePortals {
         BlockPos marker = new BlockPos(24, 7, 24);
         if (level.getBlockState(marker).is(Blocks.DIAMOND_BLOCK)) return;
 
-        String id = DESTINATIONS.stream()\n                .filter(destination -> destination.key().equals(level.dimension()))\n                .map(Destination::dimension)\n                .findFirst().orElse("");
+        String id = DESTINATIONS.stream()
+                .filter(destination -> destination.key().equals(level.dimension()))
+                .map(Destination::dimension)
+                .findFirst().orElse("");
         switch (id) {
             case "universe_one" -> buildLushSanctuary(level);
             case "universe_two" -> buildCrimsonObelisks(level);
