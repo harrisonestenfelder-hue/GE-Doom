@@ -70,7 +70,6 @@ public final class DoomNetwork {
 
         @SubscribeEvent
         public static void register(RegisterPayloadHandlersEvent event) {
-
             var registrar = event.registrar("1");
 
             registrar.playToServer(
