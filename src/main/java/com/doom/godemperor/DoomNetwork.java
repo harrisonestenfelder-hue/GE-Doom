@@ -11,7 +11,6 @@ import net.minecraft.server.level.ServerPlayer;
 
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
-import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
@@ -70,6 +69,7 @@ public final class DoomNetwork {
 
         @SubscribeEvent
         public static void register(RegisterPayloadHandlersEvent event) {
+
             var registrar = event.registrar("1");
 
             registrar.playToServer(
@@ -123,14 +123,10 @@ public final class DoomNetwork {
     }
 
     public static void requestUnlock(String skillId) {
-        PacketDistributor.sendToServer(
-                new UnlockSkill(skillId)
-        );
+        DoomClientNetwork.requestUnlock(skillId);
     }
 
     public static void requestAssign(int slot, String skillId) {
-        PacketDistributor.sendToServer(
-                new AssignSkill(slot, skillId)
-        );
+        DoomClientNetwork.requestAssign(slot, skillId);
     }
 }
