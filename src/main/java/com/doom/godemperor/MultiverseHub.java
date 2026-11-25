@@ -135,7 +135,6 @@ public final class MultiverseHub {
         BlockState silver = Blocks.IRON_BLOCK.defaultBlockState();
         BlockState silverStone = Blocks.POLISHED_ANDESITE.defaultBlockState();
         BlockState gold = Blocks.GOLD_BLOCK.defaultBlockState();
-        BlockState glass = Blocks.WHITE_STAINED_GLASS.defaultBlockState();
         BlockState light = Blocks.SEA_LANTERN.defaultBlockState();
 
         // A broad quartz floor and ceiling form the main chamber.
@@ -160,13 +159,7 @@ public final class MultiverseHub {
                     put(level, new BlockPos(offset, y, 24), wall);
                     put(level, new BlockPos(-24, y, offset), wall);
                     put(level, new BlockPos(24, y, offset), wall);
-                } else if (y >= FLOOR_Y + 5 && y <= FLOOR_Y + 10) {
-                    // Bright glass panels above the future gateway thresholds.
-                    put(level, new BlockPos(offset, y, -24), glass);
-                    put(level, new BlockPos(offset, y, 24), glass);
-                    put(level, new BlockPos(-24, y, offset), glass);
-                    put(level, new BlockPos(24, y, offset), glass);
-                }
+
             }
         }
 
@@ -200,7 +193,7 @@ public final class MultiverseHub {
         }
 
         put(level, marker, gold);
-        put(level, new BlockPos(0, FLOOR_Y + 1, 0), Blocks.BEACON.defaultBlockState());
+        put(level, new BlockPos(0, FLOOR_Y + 1, 0), Blocks.SEA_LANTERN.defaultBlockState());
     }
 
     private static void buildGate(
@@ -230,8 +223,8 @@ public final class MultiverseHub {
 
         for (int offset = -2; offset <= 2; offset++) {
             BlockPos threshold = alongX
-                    ? new BlockPos(centerX + offset, FLOOR_Y + 1, centerZ)
-                    : new BlockPos(centerX, FLOOR_Y + 1, centerZ + offset);
+                    ? new BlockPos(centerX + offset, FLOOR_Y, centerZ)
+                    : new BlockPos(centerX, FLOOR_Y, centerZ + offset);
             put(level, threshold, silver);
         }
     }
