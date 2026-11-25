@@ -159,7 +159,7 @@ public final class MultiverseHub {
                     put(level, new BlockPos(offset, y, 24), wall);
                     put(level, new BlockPos(-24, y, offset), wall);
                     put(level, new BlockPos(24, y, offset), wall);
-
+                }
             }
         }
 
@@ -175,8 +175,8 @@ public final class MultiverseHub {
 
         // Gold floor inlays lead from the central seal toward each gateway.
         for (int i = -18; i <= 18; i++) {
-            put(level, new BlockPos(i, FLOOR_Y + 1, 0), gold);
-            put(level, new BlockPos(0, FLOOR_Y + 1, i), gold);
+            put(level, new BlockPos(i, FLOOR_Y, 0), gold);
+            put(level, new BlockPos(0, FLOOR_Y, i), gold);
         }
 
         // Four automatically-built silver-and-gold gateway arches.
@@ -218,7 +218,7 @@ public final class MultiverseHub {
             BlockPos top = alongX
                     ? new BlockPos(centerX + offset, FLOOR_Y + 11, centerZ)
                     : new BlockPos(centerX, FLOOR_Y + 11, centerZ + offset);
-            put(level, top, Math.abs(offset) == 0 ? gold : silver);
+            put(level, top, offset == 0 ? gold : silver);
         }
 
         for (int offset = -2; offset <= 2; offset++) {
