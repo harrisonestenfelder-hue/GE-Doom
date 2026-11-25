@@ -9,6 +9,9 @@ import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundSetSubtitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitleTextPacket;
+import net.minecraft.network.protocol.game.ClientboundSetTitlesAnimationPacket;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
@@ -660,6 +663,43 @@ public class GodEmperorDoom {
                         "GOD EMPEROR DOOM AWAKENED."
                 ),
                 false
+        );
+
+        // Native Minecraft title sequence delivers the transformation reveal
+        // without requiring a custom client-only camera system.
+        player.connection.send(
+                new ClientboundSetTitlesAnimationPacket(12, 90, 24)
+        );
+        player.connection.send(
+                new ClientboundSetTitleTextPacket(
+                        Component.literal("GOD EMPEROR DOOM")
+                )
+        );
+        player.connection.send(
+                new ClientboundSetSubtitleTextPacket(
+                        Component.literal("THE POWER BEYOND REALITY IS MINE")
+                )
+        );
+
+        level.playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.WITHER_SPAWN,
+                SoundSource.PLAYERS,
+                1.4F,
+                0.8F
+        );
+
+        level.sendParticles(
+                new DustParticleOptions(0xFFFFFF, 2.8F),
+                player.getX(),
+                player.getY() + 1.0D,
+                player.getZ(),
+                100,
+                1.8D,
+                1.6D,
+                1.8D,
+                0.08D
         );
 
         return true;
