@@ -491,15 +491,15 @@ public class GodEmperorDoom {
         );
 
         level.sendParticles(
-                ParticleTypes.FLASH,
+                ParticleTypes.END_ROD,
                 player.getX(),
                 player.getY() + 1.0,
                 player.getZ(),
-                1,
-                0,
-                0,
-                0,
-                0
+                35,
+                0.8,
+                1.0,
+                0.8,
+                0.08
         );
 
         player.level().playSound(
