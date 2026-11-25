@@ -41,6 +41,7 @@ public class BeyonderEntity extends Monster {
     private int barrageCooldown = 210;
     private int gravityCooldown = 240;
     private int barrageWindup = 0;
+    private int barrageStrikesRemaining = 0;
     private int gravityDuration = 0;
     private double barrageX;
     private double barrageY;
@@ -138,6 +139,24 @@ public class BeyonderEntity extends Monster {
         serverLevel.playSound(null, this.blockPosition(), SoundEvents.BEACON_POWER_SELECT,
                 SoundSource.HOSTILE, 2.0F, nextPhase == 3 ? 0.55F : 0.8F);
 
+        // Three expanding gold rings make each phase change unmistakable.
+        for (int ring = 1; ring <= 3; ring++) {
+            double radius = ring * 2.8D;
+            for (int point = 0; point < 32; point++) {
+                double angle = Math.PI * 2.0D * point / 32.0D;
+                serverLevel.sendParticles(new DustParticleOptions(0xFFD700, 2.4F),
+                        this.getX() + Math.cos(angle) * radius,
+                        this.getY() + 0.15D + ring * 0.25D,
+                        this.getZ() + Math.sin(angle) * radius,
+                        2, 0.05D, 0.12D, 0.05D, 0.01D);
+            }
+        }
+        for (ServerPlayer player : serverLevel.getEntitiesOfClass(
+                ServerPlayer.class, this.getBoundingBox().inflate(64.0D))) {
+            player.displayClientMessage(Component.literal(
+                    nextPhase == 3 ? "PHASE III — THE ABSOLUTE POWER AWAKENS" :
+                            "PHASE II — COSMIC DOMINION"), true);
+        }
         serverLevel.sendParticles(new DustParticleOptions(0xFFD700, 3.0F),
                 this.getX(), this.getY() + 1.5D, this.getZ(),
                 180, 2.0D, 2.0D, 2.0D, 0.16D);
@@ -197,6 +216,17 @@ public class BeyonderEntity extends Monster {
                         dz / distance * 0.10D
                 ));
             }
+            if (this.gravityDuration > 0 && this.tickCount % 4 == 0) {
+                double warningRadius = 14.0D;
+                for (int point = 0; point < 24; point++) {
+                    double angle = Math.PI * 2.0D * point / 24.0D;
+                    serverLevel.sendParticles(new DustParticleOptions(0xFFD700, 1.8F),
+                            this.getX() + Math.cos(angle) * warningRadius,
+                            this.getY() + 0.12D,
+                            this.getZ() + Math.sin(angle) * warningRadius,
+                            1, 0.02D, 0.03D, 0.02D, 0.0D);
+                }
+            }
             if (this.gravityDuration == 0) {
                 this.gravityCrushRelease(serverLevel);
             }
@@ -216,8 +246,9 @@ public class BeyonderEntity extends Monster {
             this.barrageY = target.getY();
             this.barrageZ = target.getZ();
             this.barrageWindup = 24;
+            this.barrageStrikesRemaining = this.enraged ? 4 : 3;
             this.barrageCooldown = this.enraged ? 100 : 165;
-            target.displayClientMessage(Component.literal("THE BEYONDER MARKS YOUR POSITION!"), true);
+            target.displayClientMessage(Component.literal("THE BEYONDER MARKS YOUR POSITION — MOVE!"), true);
             serverLevel.playSound(null, target.blockPosition(), SoundEvents.RESPAWN_ANCHOR_CHARGE,
                     SoundSource.HOSTILE, 1.5F, 1.2F);
         }
@@ -225,6 +256,8 @@ public class BeyonderEntity extends Monster {
         if (this.gravityDuration == 0 && --this.gravityCooldown <= 0) {
             this.gravityDuration = 35;
             this.gravityCooldown = this.enraged ? 125 : 205;
+            serverLevel.playSound(null, this.blockPosition(), SoundEvents.RESPAWN_ANCHOR_CHARGE,
+                    SoundSource.HOSTILE, 1.8F, 0.85F);
             serverLevel.sendParticles(new DustParticleOptions(0xFFD700, 3.0F),
                     this.getX(), this.getY() + 1.0D, this.getZ(),
                     100, 3.0D, 1.5D, 3.0D, 0.08D);
@@ -276,6 +309,18 @@ public class BeyonderEntity extends Monster {
             player.hurtServer(serverLevel, serverLevel.damageSources().magic(),
                     this.enraged ? 13.0F : 9.0F);
             player.setDeltaMovement(player.getDeltaMovement().add(0.0D, 0.65D, 0.0D));
+        }
+
+        // Follow the first marked strike with two more impacts around the same area.
+        if (this.barrageStrikesRemaining > 1) {
+            this.barrageStrikesRemaining--;
+            this.barrageX += this.random.nextInt(7) - 3;
+            this.barrageZ += this.random.nextInt(7) - 3;
+            this.barrageWindup = 12;
+            serverLevel.playSound(null, BlockPos.containing(this.barrageX, this.barrageY, this.barrageZ),
+                    SoundEvents.RESPAWN_ANCHOR_CHARGE, SoundSource.HOSTILE, 1.0F, 1.35F);
+        } else {
+            this.barrageStrikesRemaining = 0;
         }
     }
 
