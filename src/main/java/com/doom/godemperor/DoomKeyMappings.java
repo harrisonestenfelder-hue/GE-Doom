@@ -27,6 +27,11 @@ public class DoomKeyMappings {
                     )
             );
 
+    // Skill tree
+
+    public static final KeyMapping OPEN_SKILL_TREE =
+            key("open_skill_tree", GLFW.GLFW_KEY_K);
+
     // Default ability-slot controls
 
     public static final KeyMapping SLOT_1 =
@@ -77,6 +82,8 @@ public class DoomKeyMappings {
     @SubscribeEvent
     public static void register(RegisterKeyMappingsEvent event) {
         event.registerCategory(CATEGORY);
+
+        event.register(OPEN_SKILL_TREE);
 
         event.register(SLOT_1);
         event.register(SLOT_2);
