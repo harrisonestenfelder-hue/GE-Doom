@@ -11,6 +11,7 @@ import net.minecraft.world.entity.Relative;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.levelgen.Heightmap;
 
 import java.util.Map;
 import java.util.Set;
@@ -44,7 +45,7 @@ public final class MultiverseHub {
     private MultiverseHub() {}
 
     public static void toggle(ServerPlayer player) {
-        MinecraftServer server = player.getServer();
+        MinecraftServer server = ((ServerLevel) player.level()).getServer();
         if (server == null) {
             return;
         }
@@ -68,7 +69,7 @@ public final class MultiverseHub {
         RETURN_POINTS.put(
                 player.getUUID(),
                 new ReturnPoint(
-                        player.serverLevel().dimension(),
+                        ((ServerLevel) player.level()).dimension(),
                         player.getX(),
                         player.getY(),
                         player.getZ(),
@@ -81,11 +82,12 @@ public final class MultiverseHub {
         player.teleportTo(
                 hub,
                 0.5D,
-                FLOOR_Y + 1.0D,
+                FLOOR_Y + 2.0D,
                 8.5D,
                 Set.of(),
                 180.0F,
-                0.0F
+                0.0F,
+                true
         );
         player.fallDistance = 0.0F;
         player.displayClientMessage(
@@ -108,13 +110,14 @@ public final class MultiverseHub {
             point = null;
         }
 
-        double x = point == null ? destination.getSharedSpawnPos().getX() + 0.5D : point.x();
-        double y = point == null ? destination.getSharedSpawnPos().getY() : point.y();
-        double z = point == null ? destination.getSharedSpawnPos().getZ() + 0.5D : point.z();
+        BlockPos safeSpawn = destination.getHeightmapPos(Heightmap.Types.MOTION_BLOCKING, BlockPos.ZERO);
+        double x = point == null ? safeSpawn.getX() + 0.5D : point.x();
+        double y = point == null ? safeSpawn.getY() : point.y();
+        double z = point == null ? safeSpawn.getZ() + 0.5D : point.z();
         float yaw = point == null ? 0.0F : point.yaw();
         float pitch = point == null ? 0.0F : point.pitch();
 
-        player.teleportTo(destination, x, y, z, Set.of(), yaw, pitch);
+        player.teleportTo(destination, x, y, z, Set.of(), yaw, pitch, true);
         player.fallDistance = 0.0F;
         player.displayClientMessage(
                 net.minecraft.network.chat.Component.literal("RETURNING TO YOUR PREVIOUS REALITY"),
@@ -279,6 +282,51 @@ public final class MultiverseHub {
         for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 5; y++) {
             put(level, new BlockPos(-1, y, 0), glass);
             put(level, new BlockPos(1, y, 0), glass);
+        }
+    }
+
+    private static void buildGate(
+            ServerLevel level,
+            int centerX,
+            int centerZ,
+            boolean alongX,
+            BlockState stone,
+            BlockState silver,
+            BlockState gold
+    ) {
+        // Two monumental uprights and a crowned lintel frame each future portal.
+        for (int side : new int[]{-5, 5}) {
+            for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 13; y++) {
+                BlockPos pos = alongX
+                        ? new BlockPos(centerX + side, y, centerZ)
+                        : new BlockPos(centerX, y, centerZ + side);
+                put(level, pos, y >= FLOOR_Y + 12 ? gold : stone);
+            }
+        }
+
+        for (int offset = -5; offset <= 5; offset++) {
+            BlockPos top = alongX
+                    ? new BlockPos(centerX + offset, FLOOR_Y + 13, centerZ)
+                    : new BlockPos(centerX, FLOOR_Y + 13, centerZ + offset);
+            put(level, top, Math.abs(offset) <= 1 ? gold : silver);
+        }
+
+        // A silver threshold and gold center mark the walk-through opening.
+        for (int offset = -4; offset <= 4; offset++) {
+            BlockPos threshold = alongX
+                    ? new BlockPos(centerX + offset, FLOOR_Y, centerZ)
+                    : new BlockPos(centerX, FLOOR_Y, centerZ + offset);
+            put(level, threshold, Math.abs(offset) <= 1 ? gold : silver);
+        }
+
+        // Decorative inner ribs make the gateway read as a temple portal frame.
+        for (int y = FLOOR_Y + 2; y <= FLOOR_Y + 11; y += 3) {
+            for (int side : new int[]{-4, 4}) {
+                BlockPos rib = alongX
+                        ? new BlockPos(centerX + side, y, centerZ - 1)
+                        : new BlockPos(centerX - 1, y, centerZ + side);
+                put(level, rib, silver);
+            }
         }
     }
 
