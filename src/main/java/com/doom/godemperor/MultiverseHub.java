@@ -128,105 +128,239 @@ public final class MultiverseHub {
             return;
         }
 
+        // Generate the full structure in a broad circular footprint.
         level.getChunkAt(marker);
 
         BlockState floor = Blocks.QUARTZ_BLOCK.defaultBlockState();
+        BlockState polished = Blocks.POLISHED_DIORITE.defaultBlockState();
         BlockState wall = Blocks.SMOOTH_QUARTZ.defaultBlockState();
         BlockState silver = Blocks.IRON_BLOCK.defaultBlockState();
-        BlockState silverStone = Blocks.POLISHED_ANDESITE.defaultBlockState();
+        BlockState silverTrim = Blocks.POLISHED_ANDESITE.defaultBlockState();
         BlockState gold = Blocks.GOLD_BLOCK.defaultBlockState();
+        BlockState goldTrim = Blocks.GOLD_BLOCK.defaultBlockState();
         BlockState light = Blocks.SEA_LANTERN.defaultBlockState();
+        BlockState glass = Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState();
 
-        // A broad quartz floor and ceiling form the main chamber.
-        for (int x = -24; x <= 24; x++) {
-            for (int z = -24; z <= 24; z++) {
-                put(level, new BlockPos(x, FLOOR_Y, z), floor);
-                put(level, new BlockPos(x, FLOOR_Y + 15, z), wall);
+        final int radius = 38;
+        final int wallHeight = 22;
 
-                if (Math.abs(x) == 23 || Math.abs(z) == 23) {
-                    put(level, new BlockPos(x, FLOOR_Y + 1, z), gold);
+        // Vast circular floor with a layered quartz-and-silver border.
+        for (int x = -radius; x <= radius; x++) {
+            for (int z = -radius; z <= radius; z++) {
+                int distance = x * x + z * z;
+                if (distance <= radius * radius) {
+                    BlockState tile = ((Math.abs(x / 4) + Math.abs(z / 4)) % 2 == 0)
+                            ? floor : polished;
+                    put(level, new BlockPos(x, FLOOR_Y, z), tile);
+                    if (distance >= 35 * 35) {
+                        put(level, new BlockPos(x, FLOOR_Y, z), silverTrim);
+                    }
                 }
             }
         }
 
-        // Four walls, each with a clear, walk-through gateway opening.
-        for (int y = FLOOR_Y + 1; y < FLOOR_Y + 15; y++) {
-            for (int offset = -24; offset <= 24; offset++) {
-                boolean doorway = Math.abs(offset) <= 3 && y <= FLOOR_Y + 11;
+        // Concentric gold geometry makes the floor read as a celestial seal.
+        for (int ringRadius : new int[]{7, 13, 21, 30, 36}) {
+            buildFloorRing(level, ringRadius, gold, 0);
+        }
+        for (int axis = -34; axis <= 34; axis++) {
+            put(level, new BlockPos(axis, FLOOR_Y, 0), gold);
+            put(level, new BlockPos(0, FLOOR_Y, axis), gold);
+            if (Math.abs(axis) % 2 == 0) {
+                put(level, new BlockPos(axis, FLOOR_Y, 1), silverTrim);
+                put(level, new BlockPos(1, FLOOR_Y, axis), silverTrim);
+            }
+        }
 
-                if (!doorway) {
-                    put(level, new BlockPos(offset, y, -24), wall);
-                    put(level, new BlockPos(offset, y, 24), wall);
-                    put(level, new BlockPos(-24, y, offset), wall);
-                    put(level, new BlockPos(24, y, offset), wall);
+        // Tall circular outer wall. Four wide openings remain clear for portals.
+        for (int y = FLOOR_Y + 1; y <= FLOOR_Y + wallHeight; y++) {
+            for (int x = -radius; x <= radius; x++) {
+                for (int z = -radius; z <= radius; z++) {
+                    int distance = x * x + z * z;
+                    if (distance < (radius * radius) - 3 || distance > (radius * radius) + 3) {
+                        continue;
+                    }
+                    boolean gateOpening =
+                            (Math.abs(x) <= 5 && (Math.abs(z) >= 36))
+                            || (Math.abs(z) <= 5 && (Math.abs(x) >= 36));
+                    if (!gateOpening || y > FLOOR_Y + 14) {
+                        put(level, new BlockPos(x, y, z), wall);
+                    }
                 }
             }
         }
 
-        // Tall silver corner columns with gold caps.
-        for (int x : new int[]{-22, 22}) {
-            for (int z : new int[]{-22, 22}) {
-                for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 14; y++) {
-                    put(level, new BlockPos(x, y, z), silver);
+        // Eight monumental silver pillars support the upper temple.
+        for (int i = 0; i < 8; i++) {
+            double angle = Math.PI * 2.0D * i / 8.0D;
+            int x = (int) Math.round(Math.cos(angle) * 28.0D);
+            int z = (int) Math.round(Math.sin(angle) * 28.0D);
+            buildTemplePillar(level, x, z, FLOOR_Y + 1, FLOOR_Y + 21,
+                    silver, silverTrim, gold, light);
+        }
+
+        // A second ring of smaller columns gives the chamber depth and scale.
+        for (int i = 0; i < 16; i++) {
+            double angle = Math.PI * 2.0D * i / 16.0D;
+            int x = (int) Math.round(Math.cos(angle) * 34.0D);
+            int z = (int) Math.round(Math.sin(angle) * 34.0D);
+            for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 13; y++) {
+                put(level, new BlockPos(x, y, z), silverTrim);
+            }
+            put(level, new BlockPos(x, FLOOR_Y + 13, z), gold);
+        }
+
+        // Layered domed ceiling: concentric rings rise toward a luminous crown.
+        buildDomeRing(level, 36, FLOOR_Y + 18, silverTrim);
+        buildDomeRing(level, 31, FLOOR_Y + 22, wall);
+        buildDomeRing(level, 24, FLOOR_Y + 25, silver);
+        buildDomeRing(level, 16, FLOOR_Y + 28, wall);
+        buildDomeRing(level, 8, FLOOR_Y + 30, gold);
+        for (int y = FLOOR_Y + 18; y <= FLOOR_Y + 30; y++) {
+            int ringRadius = y < FLOOR_Y + 22 ? 35
+                    : y < FLOOR_Y + 25 ? 30
+                    : y < FLOOR_Y + 28 ? 23
+                    : y < FLOOR_Y + 30 ? 15 : 7;
+            for (int x = -ringRadius; x <= ringRadius; x++) {
+                for (int z = -ringRadius; z <= ringRadius; z++) {
+                    if (x * x + z * z <= ringRadius * ringRadius
+                            && x * x + z * z >= (ringRadius - 1) * (ringRadius - 1)) {
+                        put(level, new BlockPos(x, y, z),
+                                (y % 2 == 0) ? wall : silverTrim);
+                    }
                 }
-                put(level, new BlockPos(x, FLOOR_Y + 14, z), gold);
             }
         }
 
-        // Gold floor inlays lead from the central seal toward each gateway.
-        for (int i = -18; i <= 18; i++) {
-            put(level, new BlockPos(i, FLOOR_Y, 0), gold);
-            put(level, new BlockPos(0, FLOOR_Y, i), gold);
+        // A brilliant central crown and suspended-looking light well.
+        for (int y = FLOOR_Y + 27; y <= FLOOR_Y + 31; y++) {
+            for (int x = -4; x <= 4; x++) {
+                for (int z = -4; z <= 4; z++) {
+                    if (x * x + z * z <= 16) {
+                        put(level, new BlockPos(x, y, z), y == FLOOR_Y + 31 ? gold : glass);
+                    }
+                }
+            }
         }
+        put(level, new BlockPos(0, FLOOR_Y + 30, 0), light);
 
-        // Four automatically-built silver-and-gold gateway arches.
-        buildGate(level, 0, -23, true, silverStone, silver, gold);
-        buildGate(level, 0, 23, true, silverStone, silver, gold);
-        buildGate(level, -23, 0, false, silverStone, silver, gold);
-        buildGate(level, 23, 0, false, silverStone, silver, gold);
+        // Four monumental gateways set into the cardinal walls.
+        buildGate(level, 0, -36, true, silverTrim, silver, gold);
+        buildGate(level, 0, 36, true, silverTrim, silver, gold);
+        buildGate(level, -36, 0, false, silverTrim, silver, gold);
+        buildGate(level, 36, 0, false, silverTrim, silver, gold);
 
-        // Ceiling lighting and the central God Emperor seal.
-        for (int x : new int[]{-12, 0, 12}) {
-            for (int z : new int[]{-12, 0, 12}) {
-                put(level, new BlockPos(x, FLOOR_Y + 14, z), light);
+        // Gold-and-sea-lantern threshold strips mark each portal approach.
+        for (int distance = 9; distance <= 34; distance++) {
+            for (int offset = -1; offset <= 1; offset++) {
+                put(level, new BlockPos(offset, FLOOR_Y, -distance), gold);
+                put(level, new BlockPos(offset, FLOOR_Y, distance), gold);
+                put(level, new BlockPos(-distance, FLOOR_Y, offset), gold);
+                put(level, new BlockPos(distance, FLOOR_Y, offset), gold);
+            }
+            if (distance % 5 == 0) {
+                put(level, new BlockPos(0, FLOOR_Y + 1, -distance), light);
+                put(level, new BlockPos(0, FLOOR_Y + 1, distance), light);
+                put(level, new BlockPos(-distance, FLOOR_Y + 1, 0), light);
+                put(level, new BlockPos(distance, FLOOR_Y + 1, 0), light);
             }
         }
 
+        // Elevated throne dais at the rear of the chamber, facing the hub.
+        buildThroneDais(level, 0, -19, wall, silver, silverTrim, gold, light);
+
+        // Central seal: layered silver, quartz, and gold beneath Doom's arrival point.
+        buildFloorRing(level, 5, silverTrim, 0);
+        buildFloorRing(level, 3, gold, 0);
         put(level, marker, gold);
-        put(level, new BlockPos(0, FLOOR_Y + 1, 0), Blocks.SEA_LANTERN.defaultBlockState());
+        put(level, new BlockPos(0, FLOOR_Y + 1, 0), light);
+        for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 5; y++) {
+            put(level, new BlockPos(-1, y, 0), glass);
+            put(level, new BlockPos(1, y, 0), glass);
+        }
     }
 
-    private static void buildGate(
-            ServerLevel level,
-            int centerX,
-            int centerZ,
-            boolean alongX,
-            BlockState stone,
-            BlockState silver,
-            BlockState gold
+    private static void buildFloorRing(
+            ServerLevel level, int radius, BlockState state, int yOffset
     ) {
-        for (int side : new int[]{-4, 4}) {
-            for (int y = FLOOR_Y + 1; y <= FLOOR_Y + 11; y++) {
-                BlockPos pos = alongX
-                        ? new BlockPos(centerX + side, y, centerZ)
-                        : new BlockPos(centerX, y, centerZ + side);
-                put(level, pos, y == FLOOR_Y + 11 ? gold : stone);
+        int steps = Math.max(48, radius * 12);
+        for (int i = 0; i < steps; i++) {
+            double angle = Math.PI * 2.0D * i / steps;
+            int x = (int) Math.round(Math.cos(angle) * radius);
+            int z = (int) Math.round(Math.sin(angle) * radius);
+            put(level, new BlockPos(x, FLOOR_Y + yOffset, z), state);
+        }
+    }
+
+    private static void buildTemplePillar(
+            ServerLevel level, int x, int z, int bottom, int top,
+            BlockState silver, BlockState trim, BlockState gold, BlockState light
+    ) {
+        for (int y = bottom; y <= top; y++) {
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dz = -1; dz <= 1; dz++) {
+                    put(level, new BlockPos(x + dx, y, z + dz),
+                            dx == 0 && dz == 0 ? silver : trim);
+                }
+            }
+            if ((y - bottom) % 5 == 0) {
+                put(level, new BlockPos(x, y, z), light);
+            }
+        }
+        for (int dx = -2; dx <= 2; dx++) {
+            for (int dz = -2; dz <= 2; dz++) {
+                if (Math.abs(dx) == 2 || Math.abs(dz) == 2) {
+                    put(level, new BlockPos(x + dx, top, z + dz), gold);
+                }
+            }
+        }
+    }
+
+    private static void buildDomeRing(
+            ServerLevel level, int radius, int y, BlockState state
+    ) {
+        int steps = radius * 16;
+        for (int i = 0; i < steps; i++) {
+            double angle = Math.PI * 2.0D * i / steps;
+            int x = (int) Math.round(Math.cos(angle) * radius);
+            int z = (int) Math.round(Math.sin(angle) * radius);
+            put(level, new BlockPos(x, y, z), state);
+        }
+    }
+
+    private static void buildThroneDais(
+            ServerLevel level, int centerX, int centerZ,
+            BlockState quartz, BlockState silver, BlockState trim,
+            BlockState gold, BlockState light
+    ) {
+        for (int layer = 0; layer < 4; layer++) {
+            int half = 7 - layer;
+            int y = FLOOR_Y + layer;
+            for (int x = -half; x <= half; x++) {
+                for (int z = -half; z <= half; z++) {
+                    put(level, new BlockPos(centerX + x, y, centerZ + z),
+                            layer == 3 ? quartz : trim);
+                }
             }
         }
 
-        for (int offset = -4; offset <= 4; offset++) {
-            BlockPos top = alongX
-                    ? new BlockPos(centerX + offset, FLOOR_Y + 11, centerZ)
-                    : new BlockPos(centerX, FLOOR_Y + 11, centerZ + offset);
-            put(level, top, offset == 0 ? gold : silver);
+        // A tall, unmistakable throne silhouette, built from silver and gold.
+        int seatY = FLOOR_Y + 4;
+        for (int x = -3; x <= 3; x++) {
+            put(level, new BlockPos(centerX + x, seatY, centerZ), gold);
+            put(level, new BlockPos(centerX + x, seatY + 1, centerZ), silver);
         }
-
-        for (int offset = -2; offset <= 2; offset++) {
-            BlockPos threshold = alongX
-                    ? new BlockPos(centerX + offset, FLOOR_Y, centerZ)
-                    : new BlockPos(centerX, FLOOR_Y, centerZ + offset);
-            put(level, threshold, silver);
+        for (int y = seatY; y <= seatY + 8; y++) {
+            put(level, new BlockPos(centerX - 3, y, centerZ - 2), silver);
+            put(level, new BlockPos(centerX + 3, y, centerZ - 2), silver);
+            put(level, new BlockPos(centerX - 3, y, centerZ - 1), trim);
+            put(level, new BlockPos(centerX + 3, y, centerZ - 1), trim);
         }
+        for (int x = -3; x <= 3; x++) {
+            put(level, new BlockPos(centerX + x, seatY + 8, centerZ - 2), gold);
+        }
+        put(level, new BlockPos(centerX, seatY + 5, centerZ - 2), light);
+        put(level, new BlockPos(centerX, seatY + 9, centerZ - 2), gold);
     }
 
     private static void put(ServerLevel level, BlockPos pos, BlockState state) {
