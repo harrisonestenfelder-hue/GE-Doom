@@ -12,7 +12,10 @@ import org.lwjgl.glfw.GLFW;
 
 @EventBusSubscriber(
         modid = GodEmperorDoom.MOD_ID,
-        bus = EventBusSubscriber.Bus.MOD,
+        @EventBusSubscriber(
+        modid = GodEmperorDoom.MOD_ID,
+        value = Dist.CLIENT
+)
         value = Dist.CLIENT
 )
 public class DoomKeyMappings {
