@@ -19,7 +19,8 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.Block;\nimport net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
 
 public final class MultiversePortals {
     private static final int HUB_FLOOR = 60;
@@ -227,7 +228,7 @@ public final class MultiversePortals {
             int x = (int) Math.round(Math.cos(a) * 17);
             int z = (int) Math.round(Math.sin(a) * 17);
             int height = 9 + (i * 7 % 15);
-            pillar(level, x, 9, z, height, base, tip);
+            pillar(level, x, 9, z, height, base.defaultBlockState(), tip.defaultBlockState());
             level.sendParticles(new DustParticleOptions(color, 1.0F),
                     x + 0.5D, 9 + height, z + 0.5D, 12, 0.4D, 0.8D, 0.4D, 0.01D);
         }
@@ -328,6 +329,13 @@ public final class MultiversePortals {
             int z = (int) Math.round(Math.sin(a) * 20);
             pillar(level, x, 9, z, 18, Blocks.GOLD_BLOCK, Blocks.SEA_LANTERN);
         }
+    }
+
+    private static void pillar(
+            ServerLevel level, int x, int baseY, int z, int height,
+            Block body, Block crown
+    ) {
+        pillar(level, x, baseY, z, height, body.defaultBlockState(), crown.defaultBlockState());
     }
 
     private static void pillar(
