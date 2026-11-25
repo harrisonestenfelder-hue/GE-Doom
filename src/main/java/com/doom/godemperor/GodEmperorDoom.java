@@ -5,11 +5,13 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.commands.Commands;
+import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -290,11 +292,11 @@ public class GodEmperorDoom {
     public GodEmperorDoom(IEventBus modBus) {
         ITEMS.register(modBus);
         TABS.register(modBus);
-        
+
         DoomProgression.register();
         DoomLoadout.register();
         DoomAbilities.register();
-        
+
         ATTACHMENTS.register(modBus);
 
         NeoForge.EVENT_BUS.addListener(this::onPlayerTick);
@@ -421,6 +423,109 @@ public class GodEmperorDoom {
         );
     }
 
+    // GOD EMPEROR STORY UNLOCK
+
+    public static void unlockGodEmperorStory(ServerPlayer player) {
+        DoomProgression.unlockGodEmperor(player);
+
+        player.displayClientMessage(
+                Component.literal(
+                        "THE GOD EMPEROR SKILL TREE HAS BEEN UNLOCKED."
+                ),
+                false
+        );
+
+        player.level().playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.BEACON_ACTIVATE,
+                SoundSource.PLAYERS,
+                1.5F,
+                0.7F
+        );
+    }
+
+    // GOD EMPEROR AWAKENING
+
+    public static boolean awakenGodEmperor(ServerPlayer player) {
+        DoomProgression.Progress progress =
+                DoomProgression.get(player);
+
+        if (!progress.godEmperorUnlocked()) {
+            player.displayClientMessage(
+                    Component.literal(
+                            "You have not unlocked the God Emperor power."
+                    ),
+                    true
+            );
+            return false;
+        }
+
+        DoomPlayerData data = player.getData(PLAYER_DATA);
+
+        if (data.awakened()) {
+            player.displayClientMessage(
+                    Component.literal(
+                            "You are already the God Emperor."
+                    ),
+                    true
+            );
+            return false;
+        }
+
+        player.setData(
+                PLAYER_DATA,
+                new DoomPlayerData(
+                        data.energy(),
+                        true,
+                        data.aegisReadyAt(),
+                        data.surgeReadyAt()
+                )
+        );
+
+        // WHITE GOD EMPEROR ENERGY
+
+        player.serverLevel().sendParticles(
+                ParticleTypes.END_ROD,
+                player.getX(),
+                player.getY() + 1.0,
+                player.getZ(),
+                120,
+                1.2,
+                1.5,
+                1.2,
+                0.12
+        );
+
+        player.serverLevel().sendParticles(
+                ParticleTypes.FLASH,
+                player.getX(),
+                player.getY() + 1.0,
+                player.getZ(),
+                1,
+                0,
+                0,
+                0,
+                0
+        );
+
+        player.level().playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.TOTEM_USE,
+                SoundSource.PLAYERS,
+                1.5F,
+                0.7F
+        );
+
+        player.displayClientMessage(
+                Component.literal("GOD EMPEROR DOOM AWAKENED."),
+                false
+        );
+
+        return true;
+    }
+
     // COMMANDS
 
     private void registerCommands(RegisterCommandsEvent event) {
@@ -436,12 +541,17 @@ public class GodEmperorDoom {
                                     DoomPlayerData data =
                                             player.getData(PLAYER_DATA);
 
+                                    DoomProgression.Progress progress =
+                                            DoomProgression.get(player);
+
                                     context.getSource().sendSuccess(
                                             () -> Component.literal(
                                                     "Doom Energy: "
                                                             + data.energy()
                                                             + "/100 | Awakened: "
                                                             + data.awakened()
+                                                            + " | God Emperor Unlocked: "
+                                                            + progress.godEmperorUnlocked()
                                             ),
                                             false
                                     );
@@ -456,36 +566,7 @@ public class GodEmperorDoom {
                                             context.getSource()
                                                     .getPlayerOrException();
 
-                                    DoomPlayerData data =
-                                            player.getData(PLAYER_DATA);
-
-                                    if (data.awakened()) {
-                                        context.getSource().sendFailure(
-                                                Component.literal(
-                                                        "Doom is already awakened."
-                                                )
-                                        );
-                                        return 0;
-                                    }
-
-                                    player.setData(
-                                            PLAYER_DATA,
-                                            new DoomPlayerData(
-                                                    data.energy(),
-                                                    true,
-                                                    data.aegisReadyAt(),
-                                                    data.surgeReadyAt()
-                                            )
-                                    );
-
-                                    context.getSource().sendSuccess(
-                                            () -> Component.literal(
-                                                    "The power of Doom awakens."
-                                            ),
-                                            false
-                                    );
-
-                                    return 1;
+                                    return awakenGodEmperor(player) ? 1 : 0;
                                 })
                         )
 
