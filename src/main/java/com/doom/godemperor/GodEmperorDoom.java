@@ -434,8 +434,6 @@ public class GodEmperorDoom {
             double sourceY,
             double sourceZ
     ) {
-        rewardBeyonderDefeat(player);
-
         DoomPlayerData data = player.getData(PLAYER_DATA);
         if (data.awakened() || DoomProgression.get(player).godEmperorUnlocked()
                 || AWAKENING_SCENES.containsKey(player.getUUID())) {
@@ -446,6 +444,7 @@ public class GodEmperorDoom {
                 player.getUUID(),
                 new AwakeningScene(sourceX, sourceY, sourceZ, 0)
         );
+        rewardBeyonderDefeat(player);
 
         player.displayClientMessage(
                 Component.literal("THE BEYONDER'S POWER IS CALLING TO YOU..."),
@@ -522,6 +521,32 @@ public class GodEmperorDoom {
                     new DustParticleOptions(0xFFFFFF, 3.5F),
                     targetX, targetY, targetZ,
                     180, 2.0D, 2.0D, 2.0D, 0.16D
+            );
+
+            // The transfer culminates in several expanding white rings.
+            for (int ring = 1; ring <= 4; ring++) {
+                double radius = ring * 2.25D;
+                double ringY = player.getY() + 0.15D + ring * 0.35D;
+                for (int point = 0; point < 48; point++) {
+                    double angle = Math.PI * 2.0D * point / 48.0D;
+                    level.sendParticles(
+                            new DustParticleOptions(0xFFFFFF, 2.0F + ring * 0.35F),
+                            targetX + Math.cos(angle) * radius,
+                            ringY,
+                            targetZ + Math.sin(angle) * radius,
+                            1, 0.02D, 0.04D, 0.02D, 0.0D
+                    );
+                }
+            }
+
+            level.sendParticles(
+                    ParticleTypes.END_ROD,
+                    targetX, targetY, targetZ,
+                    90, 0.7D, 1.8D, 0.7D, 0.12D
+            );
+            player.displayClientMessage(
+                    Component.literal("THE POWER OF THE BEYONDER IS NOW YOURS."),
+                    false
             );
             unlockGodEmperorStory(player);
             awakenGodEmperor(player);
