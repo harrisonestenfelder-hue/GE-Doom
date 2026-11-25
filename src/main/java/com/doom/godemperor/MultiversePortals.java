@@ -226,7 +226,7 @@ public final class MultiversePortals {
         // A vertical marker scan avoids rebuilding the fortress after its own towers
         // change the terrain heightmap.
         for (int y = level.getMinY(); y < level.getMaxY(); y++) {
-            if (level.getBlockState(new BlockPos(48, y, 48)).is(Blocks.BEACON)) {
+            if (level.getBlockState(new BlockPos(48, y, 48)).is(Blocks.LODESTONE)) {
                 return;
             }
         }
@@ -240,7 +240,7 @@ public final class MultiversePortals {
 
         int baseY = Math.max(level.getMinY() + 8, level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
-                48, 48) - 1);
+                10, 48) - 1);
 
         // Remove the old compact fortress marker and its recognizable block palette.
         for (int y = level.getMinY(); y < level.getMaxY(); y++) {
@@ -624,7 +624,7 @@ public final class MultiversePortals {
                 level.setBlock(new BlockPos(48, y, 48), roof, 3);
             }
         }
-        level.setBlock(new BlockPos(48, baseY + 47, 48), Blocks.BEACON.defaultBlockState(), 3);
+        level.setBlock(new BlockPos(48, baseY + 47, 48), Blocks.LODESTONE.defaultBlockState(), 3);
 
         // Throne platform and throne visible through the keep's central hall.
         for (int x = 43; x <= 53; x++) {
