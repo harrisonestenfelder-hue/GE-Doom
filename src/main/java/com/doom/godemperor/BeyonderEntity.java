@@ -16,6 +16,7 @@ import net.minecraft.world.entity.ai.goal.FloatGoal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
 import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
 import net.minecraft.world.entity.ai.goal.target.HurtByTargetGoal;
 import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
 import net.minecraft.world.entity.monster.Monster;
@@ -42,7 +43,8 @@ public class BeyonderEntity extends Monster {
     @Override
     protected void registerGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.15D, true));
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.35D, false));
+        this.goalSelector.addGoal(5, new WaterAvoidingRandomStrollGoal(this, 0.8D));
         this.goalSelector.addGoal(6, new LookAtPlayerGoal(this, Player.class, 48.0F));
         this.goalSelector.addGoal(7, new RandomLookAroundGoal(this));
 
