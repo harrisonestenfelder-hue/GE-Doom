@@ -22,6 +22,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EntitySpawnReason;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.Mob;
 import net.minecraft.world.item.ItemStack;
@@ -391,7 +392,7 @@ public final class MultiversePortals {
             ServerLevel level, EntityType<? extends Mob> type, String name,
             int x, int z, ItemStack weapon
     ) {
-        Mob mob = type.create(level);
+        Mob mob = type.create(level, EntitySpawnReason.COMMAND);
         if (mob == null) {
             return;
         }
