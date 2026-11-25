@@ -19,7 +19,7 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.Block;\nimport net.minecraft.world.level.block.state.BlockState;
 
 public final class MultiversePortals {
     private static final int HUB_FLOOR = 60;
@@ -178,7 +178,7 @@ public final class MultiversePortals {
         BlockPos marker = new BlockPos(24, 7, 24);
         if (level.getBlockState(marker).is(Blocks.DIAMOND_BLOCK)) return;
 
-        String id = level.dimension().location().getPath();
+        String id = DESTINATIONS.stream()\n                .filter(destination -> destination.key().equals(level.dimension()))\n                .map(Destination::dimension)\n                .findFirst().orElse("");
         switch (id) {
             case "universe_one" -> buildLushSanctuary(level);
             case "universe_two" -> buildCrimsonObelisks(level);
@@ -221,7 +221,7 @@ public final class MultiversePortals {
         }
     }
 
-    private static void buildSpireRing(ServerLevel level, BlockState base, BlockState tip, int color) {
+    private static void buildSpireRing(ServerLevel level, Block base, Block tip, int color) {
         for (int i = 0; i < 10; i++) {
             double a = Math.PI * 2 * i / 10;
             int x = (int) Math.round(Math.cos(a) * 17);
