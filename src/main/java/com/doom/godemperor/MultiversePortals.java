@@ -21,6 +21,11 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.Mob;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 
 public final class MultiversePortals {
     private static final int HUB_FLOOR = 60;
@@ -119,9 +124,9 @@ public final class MultiversePortals {
             return;
         }
 
-        buildReturnGateway(destination);
+        int returnFloor = buildReturnGateway(destination);
         buildArrivalLandmark(destination);
-        player.teleportTo(destination, 0.5D, 9.0D, 8.5D,
+        player.teleportTo(destination, 0.5D, returnFloor + 1.0D, 0.5D,
                 Set.of(), 180.0F, 0.0F, true);
         player.fallDistance = 0.0F;
         COOLDOWNS.put(player.getUUID(), player.tickCount + 40);
@@ -152,53 +157,258 @@ public final class MultiversePortals {
                 SoundEvents.PORTAL_TRAVEL, SoundSource.PLAYERS, 1.0F, 1.1F);
     }
 
-    private static void buildReturnGateway(ServerLevel level) {
-        BlockPos marker = new BlockPos(0, 7, 0);
-        if (level.getBlockState(marker).is(Blocks.EMERALD_BLOCK)) return;
+
+    private static int buildReturnGateway(ServerLevel level) {
+        int surfaceY = level.getHeight(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
+        int floorY = Math.max(8, surfaceY - 1);
+        BlockPos marker = new BlockPos(0, floorY + 12, 0);
+        if (level.getBlockState(marker).is(Blocks.SEA_LANTERN)) {
+            return floorY;
+        }
 
         BlockState floor = Blocks.PURPUR_BLOCK.defaultBlockState();
         BlockState frame = Blocks.QUARTZ_PILLAR.defaultBlockState();
         BlockState trim = Blocks.GOLD_BLOCK.defaultBlockState();
-        for (int x = -7; x <= 7; x++) {
-            for (int z = -7; z <= 7; z++) {
-                level.setBlock(new BlockPos(x, 7, z), floor, 3);
+
+        // A broad, solid arrival platform is placed at the actual terrain surface.
+        for (int x = -8; x <= 8; x++) {
+            for (int z = -8; z <= 8; z++) {
+                level.setBlock(new BlockPos(x, floorY, z), floor, 3);
+                for (int y = floorY + 1; y <= floorY + 12; y++) {
+                    level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+                }
             }
         }
+
         for (int side : new int[]{-5, 5}) {
-            for (int y = 8; y <= 18; y++) {
+            for (int y = floorY + 1; y <= floorY + 10; y++) {
                 level.setBlock(new BlockPos(side, y, 0), frame, 3);
             }
         }
         for (int x = -5; x <= 5; x++) {
-            level.setBlock(new BlockPos(x, 18, 0), trim, 3);
+            level.setBlock(new BlockPos(x, floorY + 10, 0), trim, 3);
         }
-        level.setBlock(marker, Blocks.EMERALD_BLOCK.defaultBlockState(), 3);
+        for (int x = -8; x <= 8; x++) {
+            level.setBlock(new BlockPos(x, floorY, -8), trim, 3);
+            level.setBlock(new BlockPos(x, floorY, 8), trim, 3);
+        }
+        level.setBlock(marker, Blocks.SEA_LANTERN.defaultBlockState(), 3);
+        return floorY;
     }
 
     private static void buildArrivalLandmark(ServerLevel level) {
-        BlockPos marker = new BlockPos(24, 7, 24);
-        if (level.getBlockState(marker).is(Blocks.DIAMOND_BLOCK)) return;
+        int baseY = Math.max(8, level.getHeight(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                24, 24) - 1);
+        BlockPos marker = new BlockPos(24, baseY + 25, 24);
+        if (level.getBlockState(marker).is(Blocks.SEA_LANTERN)) {
+            return;
+        }
 
         String id = DESTINATIONS.stream()
                 .filter(destination -> destination.key().equals(level.dimension()))
                 .map(Destination::dimension)
                 .findFirst().orElse("");
+
+        BlockState foundation;
+        BlockState wall;
+        BlockState trim;
+        BlockState roof;
         switch (id) {
-            case "universe_one" -> buildLushSanctuary(level);
-            case "universe_two" -> buildCrimsonObelisks(level);
-            case "universe_three" -> buildEndMonolith(level);
-            case "frozen_wastes" -> buildSpireRing(level, Blocks.PACKED_ICE, Blocks.BLUE_ICE, 0x8BE8FF);
-            case "skylands" -> buildSkyPillars(level);
-            case "ancient_overgrowth" -> buildAncientGrove(level);
-            case "cyber_city" -> buildNeonTowers(level);
-            case "oceanic_realm" -> buildOceanSpires(level);
-            case "volcanic_wastes" -> buildVolcanicPillars(level);
-            case "crystal_dunes" -> buildCrystalSpire(level);
-            case "corrupted_realm" -> buildCorruptedShrine(level);
-            case "final_universe" -> buildFinalMonument(level);
-            default -> { return; }
+            case "universe_one" -> {
+                foundation = Blocks.MOSSY_STONE_BRICKS.defaultBlockState();
+                wall = Blocks.MOSS_BLOCK.defaultBlockState();
+                trim = Blocks.MOSSY_COBBLESTONE.defaultBlockState();
+                roof = Blocks.GREEN_CONCRETE.defaultBlockState();
+            }
+            case "universe_two" -> {
+                foundation = Blocks.RED_NETHER_BRICKS.defaultBlockState();
+                wall = Blocks.NETHER_BRICKS.defaultBlockState();
+                trim = Blocks.CRIMSON_PLANKS.defaultBlockState();
+                roof = Blocks.NETHER_WART_BLOCK.defaultBlockState();
+            }
+            case "universe_three" -> {
+                foundation = Blocks.END_STONE_BRICKS.defaultBlockState();
+                wall = Blocks.PURPUR_BLOCK.defaultBlockState();
+                trim = Blocks.OBSIDIAN.defaultBlockState();
+                roof = Blocks.PURPUR_PILLAR.defaultBlockState();
+            }
+            case "frozen_wastes" -> {
+                foundation = Blocks.PACKED_ICE.defaultBlockState();
+                wall = Blocks.SNOW_BLOCK.defaultBlockState();
+                trim = Blocks.BLUE_ICE.defaultBlockState();
+                roof = Blocks.ICE.defaultBlockState();
+            }
+            case "skylands" -> {
+                foundation = Blocks.CALCITE.defaultBlockState();
+                wall = Blocks.QUARTZ_BLOCK.defaultBlockState();
+                trim = Blocks.GOLD_BLOCK.defaultBlockState();
+                roof = Blocks.SMOOTH_QUARTZ.defaultBlockState();
+            }
+            case "ancient_overgrowth" -> {
+                foundation = Blocks.MOSSY_COBBLESTONE.defaultBlockState();
+                wall = Blocks.MUD_BRICKS.defaultBlockState();
+                trim = Blocks.MANGROVE_PLANKS.defaultBlockState();
+                roof = Blocks.MANGROVE_LEAVES.defaultBlockState();
+            }
+            case "cyber_city" -> {
+                foundation = Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState();
+                wall = Blocks.CYAN_CONCRETE.defaultBlockState();
+                trim = Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState();
+                roof = Blocks.SEA_LANTERN.defaultBlockState();
+            }
+            case "oceanic_realm" -> {
+                foundation = Blocks.PRISMARINE_BRICKS.defaultBlockState();
+                wall = Blocks.DARK_PRISMARINE.defaultBlockState();
+                trim = Blocks.PRISMARINE.defaultBlockState();
+                roof = Blocks.SEA_LANTERN.defaultBlockState();
+            }
+            case "volcanic_wastes" -> {
+                foundation = Blocks.BLACKSTONE.defaultBlockState();
+                wall = Blocks.BASALT.defaultBlockState();
+                trim = Blocks.MAGMA_BLOCK.defaultBlockState();
+                roof = Blocks.POLISHED_BLACKSTONE.defaultBlockState();
+            }
+            case "crystal_dunes" -> {
+                foundation = Blocks.CALCITE.defaultBlockState();
+                wall = Blocks.AMETHYST_BLOCK.defaultBlockState();
+                trim = Blocks.PURPLE_STAINED_GLASS.defaultBlockState();
+                roof = Blocks.BUDDING_AMETHYST.defaultBlockState();
+            }
+            case "corrupted_realm" -> {
+                foundation = Blocks.DEEPSLATE_BRICKS.defaultBlockState();
+                wall = Blocks.CRYING_OBSIDIAN.defaultBlockState();
+                trim = Blocks.WARPED_PLANKS.defaultBlockState();
+                roof = Blocks.RESPAWN_ANCHOR.defaultBlockState();
+            }
+            default -> {
+                foundation = Blocks.QUARTZ_BLOCK.defaultBlockState();
+                wall = Blocks.QUARTZ_PILLAR.defaultBlockState();
+                trim = Blocks.GOLD_BLOCK.defaultBlockState();
+                roof = Blocks.SEA_LANTERN.defaultBlockState();
+            }
         }
-        level.setBlock(marker, Blocks.DIAMOND_BLOCK.defaultBlockState(), 3);
+
+        // Level a large fortress footprint and clear enough vertical space for its towers.
+        for (int x = 3; x <= 45; x++) {
+            for (int z = 3; z <= 45; z++) {
+                level.setBlock(new BlockPos(x, baseY, z), foundation, 3);
+                for (int y = baseY + 1; y <= baseY + 27; y++) {
+                    level.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // Outer fortress walls with a guarded main gate.
+        for (int y = baseY + 1; y <= baseY + 10; y++) {
+            for (int p = 7; p <= 41; p++) {
+                if (p < 21 || p > 27) {
+                    level.setBlock(new BlockPos(p, y, 7), wall, 3);
+                }
+                level.setBlock(new BlockPos(p, y, 41), wall, 3);
+                level.setBlock(new BlockPos(7, y, p), wall, 3);
+                level.setBlock(new BlockPos(41, y, p), wall, 3);
+            }
+        }
+        for (int p = 7; p <= 41; p++) {
+            if (p < 21 || p > 27) {
+                level.setBlock(new BlockPos(p, baseY + 11, 7), trim, 3);
+            }
+            level.setBlock(new BlockPos(p, baseY + 11, 41), trim, 3);
+            level.setBlock(new BlockPos(7, baseY + 11, p), trim, 3);
+            level.setBlock(new BlockPos(41, baseY + 11, p), trim, 3);
+        }
+
+        // Four corner towers, each with a lit crown and battlements.
+        for (int cx : new int[]{7, 41}) {
+            for (int cz : new int[]{7, 41}) {
+                for (int y = baseY + 1; y <= baseY + 19; y++) {
+                    for (int dx = -3; dx <= 3; dx++) {
+                        for (int dz = -3; dz <= 3; dz++) {
+                            if (Math.abs(dx) == 3 || Math.abs(dz) == 3) {
+                                level.setBlock(new BlockPos(cx + dx, y, cz + dz), wall, 3);
+                            }
+                        }
+                    }
+                }
+                for (int dx = -4; dx <= 4; dx++) {
+                    for (int dz = -4; dz <= 4; dz++) {
+                        if (Math.abs(dx) == 4 || Math.abs(dz) == 4) {
+                            level.setBlock(new BlockPos(cx + dx, baseY + 20, cz + dz), trim, 3);
+                        }
+                    }
+                }
+                level.setBlock(new BlockPos(cx, baseY + 19, cz), roof, 3);
+            }
+        }
+
+        // Central keep and its high command tower.
+        for (int y = baseY + 1; y <= baseY + 16; y++) {
+            for (int p = 17; p <= 31; p++) {
+                level.setBlock(new BlockPos(p, y, 17), wall, 3);
+                level.setBlock(new BlockPos(p, y, 31), wall, 3);
+                level.setBlock(new BlockPos(17, y, p), wall, 3);
+                level.setBlock(new BlockPos(31, y, p), wall, 3);
+            }
+        }
+        for (int x = 20; x <= 28; x++) {
+            for (int z = 20; z <= 28; z++) {
+                level.setBlock(new BlockPos(x, baseY + 1, z), trim, 3);
+            }
+        }
+        for (int y = baseY + 17; y <= baseY + 24; y++) {
+            for (int p = 20; p <= 28; p++) {
+                level.setBlock(new BlockPos(p, y, 20), wall, 3);
+                level.setBlock(new BlockPos(p, y, 28), wall, 3);
+                level.setBlock(new BlockPos(20, y, p), wall, 3);
+                level.setBlock(new BlockPos(28, y, p), wall, 3);
+            }
+        }
+        for (int p = 19; p <= 29; p++) {
+            level.setBlock(new BlockPos(p, baseY + 25, 19), trim, 3);
+            level.setBlock(new BlockPos(p, baseY + 25, 29), trim, 3);
+            level.setBlock(new BlockPos(19, baseY + 25, p), trim, 3);
+            level.setBlock(new BlockPos(29, baseY + 25, p), trim, 3);
+        }
+        level.setBlock(marker, Blocks.SEA_LANTERN.defaultBlockState(), 3);
+
+        // Realm champions and guards defend the stronghold.
+        spawnDefender(level, EntityType.VINDICATOR, "Realm Champion", 24, 13,
+                new ItemStack(Items.DIAMOND_AXE));
+        spawnDefender(level, EntityType.VINDICATOR, "Royal Sentinel", 13, 24,
+                new ItemStack(Items.IRON_AXE));
+        spawnDefender(level, EntityType.VINDICATOR, "Royal Sentinel", 35, 24,
+                new ItemStack(Items.IRON_AXE));
+        spawnDefender(level, EntityType.PILLAGER, "Realm Marksman", 24, 36,
+                new ItemStack(Items.CROSSBOW));
+        spawnDefender(level, EntityType.PILLAGER, "Realm Marksman", 36, 36,
+                new ItemStack(Items.CROSSBOW));
+        spawnDefender(level, EntityType.EVOKER, "Realm Arcanist", 12, 36, ItemStack.EMPTY);
+    }
+
+    private static void spawnDefender(
+            ServerLevel level, EntityType<? extends Mob> type, String name,
+            int x, int z, ItemStack weapon
+    ) {
+        Mob mob = type.create(level);
+        if (mob == null) {
+            return;
+        }
+        int y = level.getHeight(
+                net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, x, z);
+        mob.setPos(x + 0.5D, y, z + 0.5D);
+        mob.setCustomName(net.minecraft.network.chat.Component.literal(name));
+        mob.setCustomNameVisible(true);
+        mob.setPersistenceRequired();
+        if (!weapon.isEmpty()) {
+            mob.setItemSlot(EquipmentSlot.MAINHAND, weapon);
+        }
+        mob.setItemSlot(EquipmentSlot.HEAD, new ItemStack(Items.IRON_HELMET));
+        mob.setItemSlot(EquipmentSlot.CHEST, new ItemStack(Items.IRON_CHESTPLATE));
+        mob.setItemSlot(EquipmentSlot.LEGS, new ItemStack(Items.IRON_LEGGINGS));
+        mob.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.IRON_BOOTS));
+        level.addFreshEntity(mob);
     }
 
     private static void buildLushSanctuary(ServerLevel level) {
