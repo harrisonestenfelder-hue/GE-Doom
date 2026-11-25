@@ -160,6 +160,8 @@ public final class MultiversePortals {
 
 
     private static int buildReturnGateway(ServerLevel level) {
+        // Force terrain generation before querying the surface height.
+        level.getChunk(0, 0);
         int surfaceY = level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES, 0, 0);
         int floorY = Math.max(8, surfaceY - 1);
@@ -199,12 +201,55 @@ public final class MultiversePortals {
     }
 
     private static void buildArrivalLandmark(ServerLevel level) {
-        int baseY = Math.max(8, level.getHeight(
+        // Generate the fortress chunk first; otherwise an ungenerated chunk can report Y=0
+        // and place the entire stronghold beneath the actual world.
+        level.getChunk(1, 1);
+        int baseY = Math.max(level.getMinY() + 8, level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 24, 24) - 1);
-        BlockPos marker = new BlockPos(24, baseY + 25, 24);
-        if (level.getBlockState(marker).is(Blocks.SEA_LANTERN)) {
+        BlockPos marker = new BlockPos(24, baseY + 26, 24);
+        if (level.getBlockState(marker).is(Blocks.BEACON)) {
             return;
+        }
+
+        // Remove the previous underground fortress version without carving out natural terrain.
+        for (int oldY = 8; oldY <= Math.min(80, baseY + 25); oldY++) {
+            for (int x = 3; x <= 45; x++) {
+                for (int z = 3; z <= 45; z++) {
+                    BlockPos oldPos = new BlockPos(x, oldY, z);
+                    BlockState oldState = level.getBlockState(oldPos);
+                    if (oldState.is(Blocks.MOSSY_STONE_BRICKS)
+                            || oldState.is(Blocks.MOSS_BLOCK)
+                            || oldState.is(Blocks.MOSSY_COBBLESTONE)
+                            || oldState.is(Blocks.GREEN_CONCRETE)
+                            || oldState.is(Blocks.RED_NETHER_BRICKS)
+                            || oldState.is(Blocks.NETHER_BRICKS)
+                            || oldState.is(Blocks.CRIMSON_PLANKS)
+                            || oldState.is(Blocks.NETHER_WART_BLOCK)
+                            || oldState.is(Blocks.END_STONE_BRICKS)
+                            || oldState.is(Blocks.PURPUR_BLOCK)
+                            || oldState.is(Blocks.PURPUR_PILLAR)
+                            || oldState.is(Blocks.PACKED_ICE)
+                            || oldState.is(Blocks.SNOW_BLOCK)
+                            || oldState.is(Blocks.BLUE_ICE)
+                            || oldState.is(Blocks.CALCITE)
+                            || oldState.is(Blocks.QUARTZ_BLOCK)
+                            || oldState.is(Blocks.GOLD_BLOCK)
+                            || oldState.is(Blocks.MUD_BRICKS)
+                            || oldState.is(Blocks.MANGROVE_PLANKS)
+                            || oldState.is(Blocks.POLISHED_BLACKSTONE_BRICKS)
+                            || oldState.is(Blocks.CYAN_CONCRETE)
+                            || oldState.is(Blocks.PRISMARINE_BRICKS)
+                            || oldState.is(Blocks.DARK_PRISMARINE)
+                            || oldState.is(Blocks.BLACKSTONE)
+                            || oldState.is(Blocks.BASALT)
+                            || oldState.is(Blocks.DEEPSLATE_BRICKS)
+                            || oldState.is(Blocks.CRYING_OBSIDIAN)
+                            || oldState.is(Blocks.SEA_LANTERN)) {
+                        level.setBlock(oldPos, Blocks.AIR.defaultBlockState(), 3);
+                    }
+                }
+            }
         }
 
         String id = DESTINATIONS.stream()
@@ -372,7 +417,7 @@ public final class MultiversePortals {
             level.setBlock(new BlockPos(19, baseY + 25, p), trim, 3);
             level.setBlock(new BlockPos(29, baseY + 25, p), trim, 3);
         }
-        level.setBlock(marker, Blocks.SEA_LANTERN.defaultBlockState(), 3);
+        level.setBlock(marker, Blocks.BEACON.defaultBlockState(), 3);
 
         // Realm champions and guards defend the stronghold.
         spawnDefender(level, EntityType.VINDICATOR, "Realm Champion", 24, 13,
@@ -579,7 +624,10 @@ public final class MultiversePortals {
                         Math.sin(angle) * GATE_RADIUS, angle, destination.color(), tick, HUB_FLOOR);
             }
         } else if (isUniverse(level.dimension())) {
-            animateGate(level, 0.0D, 0.0D, 0.0D, 0xFFFFFF, tick, 7);
+            int returnFloor = Math.max(8, level.getHeight(
+                    net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
+                    0, 0) - 1);
+            animateGate(level, 0.0D, 0.0D, 0.0D, 0xFFFFFF, tick, returnFloor);
         }
     }
 
