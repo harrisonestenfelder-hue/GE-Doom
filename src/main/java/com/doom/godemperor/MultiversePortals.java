@@ -35,7 +35,6 @@ public final class MultiversePortals {
         }
     }
 
-    // Eleven conquerable realities and one final reality reserved for the Absolute.
     private static final List<Destination> DESTINATIONS = List.of(
             new Destination("universe_one", 0x55FFAA, false),
             new Destination("universe_two", 0xFF5533, false),
@@ -120,6 +119,7 @@ public final class MultiversePortals {
         }
 
         buildReturnGateway(destination);
+        buildArrivalLandmark(destination);
         player.teleportTo(destination, 0.5D, 9.0D, 8.5D,
                 Set.of(), 180.0F, 0.0F, true);
         player.fallDistance = 0.0F;
@@ -172,6 +172,172 @@ public final class MultiversePortals {
             level.setBlock(new BlockPos(x, 18, 0), trim, 3);
         }
         level.setBlock(marker, Blocks.EMERALD_BLOCK.defaultBlockState(), 3);
+    }
+
+    private static void buildArrivalLandmark(ServerLevel level) {
+        BlockPos marker = new BlockPos(24, 7, 24);
+        if (level.getBlockState(marker).is(Blocks.DIAMOND_BLOCK)) return;
+
+        String id = level.dimension().location().getPath();
+        switch (id) {
+            case "universe_one" -> buildLushSanctuary(level);
+            case "universe_two" -> buildCrimsonObelisks(level);
+            case "universe_three" -> buildEndMonolith(level);
+            case "frozen_wastes" -> buildSpireRing(level, Blocks.PACKED_ICE, Blocks.BLUE_ICE, 0x8BE8FF);
+            case "skylands" -> buildSkyPillars(level);
+            case "ancient_overgrowth" -> buildAncientGrove(level);
+            case "cyber_city" -> buildNeonTowers(level);
+            case "oceanic_realm" -> buildOceanSpires(level);
+            case "volcanic_wastes" -> buildVolcanicPillars(level);
+            case "crystal_dunes" -> buildCrystalSpire(level);
+            case "corrupted_realm" -> buildCorruptedShrine(level);
+            case "final_universe" -> buildFinalMonument(level);
+            default -> { return; }
+        }
+        level.setBlock(marker, Blocks.DIAMOND_BLOCK.defaultBlockState(), 3);
+    }
+
+    private static void buildLushSanctuary(ServerLevel level) {
+        pillar(level, 0, 9, 0, 18, Blocks.MOSS_BLOCK, Blocks.MOSSY_COBBLESTONE);
+        for (int i = 0; i < 8; i++) {
+            double a = Math.PI * 2 * i / 8;
+            int x = (int) Math.round(Math.cos(a) * 12);
+            int z = (int) Math.round(Math.sin(a) * 12);
+            pillar(level, x, 9, z, 7 + (i % 3), Blocks.MOSSY_COBBLESTONE, Blocks.GLOWSTONE);
+            level.setBlock(new BlockPos(x, 17 + (i % 3), z), Blocks.OAK_LEAVES.defaultBlockState(), 3);
+        }
+    }
+
+    private static void buildCrimsonObelisks(ServerLevel level) {
+        buildSpireRing(level, Blocks.CRIMSON_NYLIUM, Blocks.NETHER_BRICKS, 0xFF5533);
+    }
+
+    private static void buildEndMonolith(ServerLevel level) {
+        pillar(level, 0, 9, 0, 24, Blocks.END_STONE_BRICKS, Blocks.PURPUR_BLOCK);
+        for (int i = 0; i < 4; i++) {
+            int x = (i % 2 == 0 ? -1 : 1) * 13;
+            int z = (i < 2 ? -1 : 1) * 13;
+            pillar(level, x, 9, z, 12, Blocks.PURPUR_PILLAR, Blocks.END_ROD);
+        }
+    }
+
+    private static void buildSpireRing(ServerLevel level, BlockState base, BlockState tip, int color) {
+        for (int i = 0; i < 10; i++) {
+            double a = Math.PI * 2 * i / 10;
+            int x = (int) Math.round(Math.cos(a) * 17);
+            int z = (int) Math.round(Math.sin(a) * 17);
+            int height = 9 + (i * 7 % 15);
+            pillar(level, x, 9, z, height, base, tip);
+            level.sendParticles(new DustParticleOptions(color, 1.0F),
+                    x + 0.5D, 9 + height, z + 0.5D, 12, 0.4D, 0.8D, 0.4D, 0.01D);
+        }
+    }
+
+    private static void buildSkyPillars(ServerLevel level) {
+        for (int i = 0; i < 8; i++) {
+            double a = Math.PI * 2 * i / 8;
+            int x = (int) Math.round(Math.cos(a) * 19);
+            int z = (int) Math.round(Math.sin(a) * 19);
+            pillar(level, x, 9, z, 16 + (i % 3) * 4,
+                    Blocks.CALCITE, Blocks.GOLD_BLOCK);
+        }
+        pillar(level, 0, 9, 0, 12, Blocks.QUARTZ_BLOCK, Blocks.SEA_LANTERN);
+    }
+
+    private static void buildAncientGrove(ServerLevel level) {
+        for (int i = 0; i < 7; i++) {
+            double a = Math.PI * 2 * i / 7;
+            int x = (int) Math.round(Math.cos(a) * 16);
+            int z = (int) Math.round(Math.sin(a) * 16);
+            pillar(level, x, 9, z, 13 + (i % 3) * 3,
+                    Blocks.MANGROVE_LOG, Blocks.MANGROVE_LEAVES);
+            for (int dx = -2; dx <= 2; dx++) {
+                for (int dz = -2; dz <= 2; dz++) {
+                    if (Math.abs(dx) + Math.abs(dz) <= 3) {
+                        level.setBlock(new BlockPos(x + dx, 22 + (i % 3) * 3, z + dz),
+                                Blocks.MANGROVE_LEAVES.defaultBlockState(), 3);
+                    }
+                }
+            }
+        }
+    }
+
+    private static void buildNeonTowers(ServerLevel level) {
+        BlockState[] palette = {Blocks.CYAN_CONCRETE.defaultBlockState(),
+                Blocks.LIGHT_BLUE_CONCRETE.defaultBlockState(),
+                Blocks.LIGHT_BLUE_STAINED_GLASS.defaultBlockState()};
+        for (int i = 0; i < 8; i++) {
+            double a = Math.PI * 2 * i / 8;
+            int x = (int) Math.round(Math.cos(a) * 19);
+            int z = (int) Math.round(Math.sin(a) * 19);
+            int height = 12 + (i * 11 % 20);
+            pillar(level, x, 9, z, height, palette[i % palette.length], Blocks.SEA_LANTERN);
+        }
+    }
+
+    private static void buildOceanSpires(ServerLevel level) {
+        for (int i = 0; i < 9; i++) {
+            double a = Math.PI * 2 * i / 9;
+            int x = (int) Math.round(Math.cos(a) * 17);
+            int z = (int) Math.round(Math.sin(a) * 17);
+            pillar(level, x, 9, z, 8 + (i * 5 % 13),
+                    Blocks.PRISMARINE_BRICKS, Blocks.SEA_LANTERN);
+        }
+        pillar(level, 0, 9, 0, 15, Blocks.DARK_PRISMARINE, Blocks.PRISMARINE);
+    }
+
+    private static void buildVolcanicPillars(ServerLevel level) {
+        for (int i = 0; i < 8; i++) {
+            double a = Math.PI * 2 * i / 8;
+            int x = (int) Math.round(Math.cos(a) * 18);
+            int z = (int) Math.round(Math.sin(a) * 18);
+            pillar(level, x, 9, z, 10 + (i * 9 % 17),
+                    Blocks.BASALT, Blocks.MAGMA_BLOCK);
+            level.setBlock(new BlockPos(x, 9, z), Blocks.MAGMA_BLOCK.defaultBlockState(), 3);
+        }
+    }
+
+    private static void buildCrystalSpire(ServerLevel level) {
+        for (int i = 0; i < 6; i++) {
+            double a = Math.PI * 2 * i / 6;
+            int x = (int) Math.round(Math.cos(a) * 15);
+            int z = (int) Math.round(Math.sin(a) * 15);
+            pillar(level, x, 9, z, 9 + (i % 3) * 5,
+                    Blocks.CALCITE, Blocks.AMETHYST_BLOCK);
+            level.setBlock(new BlockPos(x, 9 + 10 + (i % 3) * 5, z),
+                    Blocks.AMETHYST_CLUSTER.defaultBlockState(), 3);
+        }
+    }
+
+    private static void buildCorruptedShrine(ServerLevel level) {
+        pillar(level, 0, 9, 0, 20, Blocks.CRYING_OBSIDIAN, Blocks.RESPAWN_ANCHOR);
+        for (int i = 0; i < 8; i++) {
+            double a = Math.PI * 2 * i / 8;
+            int x = (int) Math.round(Math.cos(a) * 14);
+            int z = (int) Math.round(Math.sin(a) * 14);
+            pillar(level, x, 9, z, 8 + (i % 4) * 3,
+                    Blocks.WARPED_STEM, Blocks.SHROOMLIGHT);
+        }
+    }
+
+    private static void buildFinalMonument(ServerLevel level) {
+        pillar(level, 0, 9, 0, 30, Blocks.QUARTZ_PILLAR, Blocks.GOLD_BLOCK);
+        for (int i = 0; i < 12; i++) {
+            double a = Math.PI * 2 * i / 12;
+            int x = (int) Math.round(Math.cos(a) * 20);
+            int z = (int) Math.round(Math.sin(a) * 20);
+            pillar(level, x, 9, z, 18, Blocks.GOLD_BLOCK, Blocks.SEA_LANTERN);
+        }
+    }
+
+    private static void pillar(
+            ServerLevel level, int x, int baseY, int z, int height,
+            BlockState body, BlockState crown
+    ) {
+        for (int y = 0; y < height; y++) {
+            BlockState state = y == height - 1 ? crown : body;
+            level.setBlock(new BlockPos(x, baseY + y, z), state, 3);
+        }
     }
 
     private static void animatePortals(ServerLevel level, int tick) {
