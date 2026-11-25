@@ -5,6 +5,7 @@ import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.commands.Commands;
+import net.minecraft.core.particles.DustParticleOptions;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
@@ -37,12 +38,19 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 import net.neoforged.neoforge.registries.NeoForgeRegistries;
 
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
 @Mod(GodEmperorDoom.MOD_ID)
 public class GodEmperorDoom {
 
     public static final String MOD_ID = "godemperor_doom";
+
+    private record AwakeningScene(double sourceX, double sourceY, double sourceZ, int elapsedTicks) {}
+
+    private static final Map<UUID, AwakeningScene> AWAKENING_SCENES = new ConcurrentHashMap<>();
+    private static final int AWAKENING_SCENE_DURATION = 100;
 
     // REGISTRIES
 
@@ -339,6 +347,8 @@ public class GodEmperorDoom {
             return;
         }
 
+        tickAwakeningScene(player);
+
         if (player.tickCount % 20 != 0) {
             return;
         }
@@ -411,6 +421,115 @@ public class GodEmperorDoom {
                             data.awakened(),
                             data.aegisReadyAt(),
                             data.surgeReadyAt()
+                    )
+            );
+        }
+    }
+
+    // BEYONDER DEFEAT: WHITE-ENERGY TRANSFER AND AWAKENING
+
+    public static void beginGodEmperorAwakening(
+            ServerPlayer player,
+            double sourceX,
+            double sourceY,
+            double sourceZ
+    ) {
+        rewardBeyonderDefeat(player);
+
+        DoomPlayerData data = player.getData(PLAYER_DATA);
+        if (data.awakened() || DoomProgression.get(player).godEmperorUnlocked()
+                || AWAKENING_SCENES.containsKey(player.getUUID())) {
+            return;
+        }
+
+        AWAKENING_SCENES.put(
+                player.getUUID(),
+                new AwakeningScene(sourceX, sourceY, sourceZ, 0)
+        );
+
+        player.displayClientMessage(
+                Component.literal("THE BEYONDER'S POWER IS CALLING TO YOU..."),
+                false
+        );
+        player.level().playSound(
+                null,
+                player.blockPosition(),
+                SoundEvents.BEACON_AMBIENT,
+                SoundSource.PLAYERS,
+                2.0F,
+                0.55F
+        );
+    }
+
+    private static void tickAwakeningScene(ServerPlayer player) {
+        AwakeningScene scene = AWAKENING_SCENES.get(player.getUUID());
+        if (scene == null) {
+            return;
+        }
+
+        if (!(player.level() instanceof ServerLevel level)) {
+            AWAKENING_SCENES.remove(player.getUUID());
+            return;
+        }
+
+        int elapsed = scene.elapsedTicks() + 1;
+        double progress = Math.min(1.0D, elapsed / (double) AWAKENING_SCENE_DURATION);
+        double targetX = player.getX();
+        double targetY = player.getY() + 1.0D;
+        double targetZ = player.getZ();
+
+        // A growing ribbon of white particles travels from the fallen Beyonder to Doom.
+        for (int point = 1; point <= 10; point++) {
+            double fraction = progress * point / 10.0D;
+            double x = scene.sourceX() + (targetX - scene.sourceX()) * fraction;
+            double y = scene.sourceY() + (targetY - scene.sourceY()) * fraction;
+            double z = scene.sourceZ() + (targetZ - scene.sourceZ()) * fraction;
+            level.sendParticles(
+                    new DustParticleOptions(0xFFFFFF, 1.15F + (float) progress),
+                    x, y, z, 2,
+                    0.10D, 0.10D, 0.10D, 0.015D
+            );
+        }
+
+        // White energy begins circling the player as the transfer intensifies.
+        double orbitRadius = 0.7D + progress * 0.8D;
+        for (int point = 0; point < 8; point++) {
+            double angle = (elapsed * 0.22D) + Math.PI * 2.0D * point / 8.0D;
+            level.sendParticles(
+                    new DustParticleOptions(0xFFFFFF, 1.3F + (float) progress),
+                    targetX + Math.cos(angle) * orbitRadius,
+                    player.getY() + 0.45D + (point % 3) * 0.55D,
+                    targetZ + Math.sin(angle) * orbitRadius,
+                    1, 0.025D, 0.04D, 0.025D, 0.01D
+            );
+        }
+
+        if (elapsed == 50) {
+            player.displayClientMessage(
+                    Component.literal("THE COSMIC POWER FLOWS INTO YOU..."),
+                    true
+            );
+            level.playSound(
+                    null, player.blockPosition(),
+                    SoundEvents.BEACON_POWER_SELECT,
+                    SoundSource.PLAYERS, 1.8F, 0.65F
+            );
+        }
+
+        if (elapsed >= AWAKENING_SCENE_DURATION) {
+            AWAKENING_SCENES.remove(player.getUUID());
+            level.sendParticles(
+                    new DustParticleOptions(0xFFFFFF, 3.5F),
+                    targetX, targetY, targetZ,
+                    180, 2.0D, 2.0D, 2.0D, 0.16D
+            );
+            unlockGodEmperorStory(player);
+            awakenGodEmperor(player);
+        } else {
+            AWAKENING_SCENES.put(
+                    player.getUUID(),
+                    new AwakeningScene(
+                            scene.sourceX(), scene.sourceY(), scene.sourceZ(), elapsed
                     )
             );
         }
