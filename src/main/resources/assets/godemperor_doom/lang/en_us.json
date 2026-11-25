@@ -1,16 +1,25 @@
 {
   "itemGroup.godemperor_doom": "God Emperor Doom",
+  "key.categories.godemperor_doom.abilities": "God Emperor Doom",
+  "key.godemperor_doom.open_skill_tree": "Open Doom Skill Tree",
+  "key.godemperor_doom.open_multiverse_hub": "Open Multiverse Hub",
+  "key.godemperor_doom.slot_1": "Ability Slot 1",
+  "key.godemperor_doom.slot_2": "Ability Slot 2",
+  "key.godemperor_doom.slot_3": "Ability Slot 3",
+  "key.godemperor_doom.slot_4": "Ability Slot 4",
+  "key.godemperor_doom.slot_5": "Ability Slot 5",
+  "key.godemperor_doom.slot_6": "Ability Slot 6",
+  "key.godemperor_doom.slot_7": "Ability Slot 7",
+  "key.godemperor_doom.slot_8": "Ability Slot 8",
+  "key.godemperor_doom.slot_9": "Ability Slot 9",
 
   "item.godemperor_doom.doom_sigil": "Doom Sigil",
-
   "item.godemperor_doom.latverian_steel_ingot": "Latverian Steel Ingot",
   "item.godemperor_doom.beyonder_ingot": "Beyonder Ingot",
-
   "item.godemperor_doom.doom_helmet": "Doctor Doom's Helmet",
   "item.godemperor_doom.doom_chestplate": "Doctor Doom's Chestplate",
   "item.godemperor_doom.doom_leggings": "Doctor Doom's Leggings",
   "item.godemperor_doom.doom_boots": "Doctor Doom's Boots",
-
   "item.godemperor_doom.god_helmet": "God Emperor Doom's Helmet",
   "item.godemperor_doom.god_chestplate": "God Emperor Doom's Chestplate",
   "item.godemperor_doom.god_leggings": "God Emperor Doom's Leggings",
