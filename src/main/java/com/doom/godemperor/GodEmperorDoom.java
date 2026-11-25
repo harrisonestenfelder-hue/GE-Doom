@@ -1,13 +1,13 @@
 package com.doom.godemperor;
 
-import com.mojang.serialization.Codec;
+import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 
 import net.minecraft.commands.Commands;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.effect.MobEffectInstance;
@@ -55,7 +55,7 @@ public class GodEmperorDoom {
     public static final ResourceKey<EquipmentAsset> DOOM_ARMOR_ASSET =
             ResourceKey.create(
                     EquipmentAssets.ROOT_ID,
-                    ResourceLocation.fromNamespaceAndPath(MOD_ID, "doom")
+                    Identifier.fromNamespaceAndPath(MOD_ID, "doom")
             );
 
     // DOOM ARMOR MATERIAL
@@ -72,7 +72,7 @@ public class GodEmperorDoom {
                     SoundEvents.ARMOR_EQUIP_IRON,
                     3.0F,
                     0.1F,
-                    ItemTags.IRON_INGOTS,
+                    ItemTags.REPAIRS_IRON_ARMOR,
                     DOOM_ARMOR_ASSET
             );
 
@@ -149,8 +149,8 @@ public class GodEmperorDoom {
             long aegisReadyAt,
             long surgeReadyAt
     ) {
-        public static final Codec<DoomPlayerData> CODEC =
-                RecordCodecBuilder.create(instance -> instance.group(
+        public static final MapCodec<DoomPlayerData> CODEC =
+            RecordCodecBuilder.mapCodec(instance -> instance.group(
                         Codec.INT.fieldOf("energy")
                                 .forGetter(DoomPlayerData::energy),
                         Codec.BOOL.fieldOf("awakened")
