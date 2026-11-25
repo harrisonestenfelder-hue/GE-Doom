@@ -495,38 +495,65 @@ public final class MultiversePortals {
                 }
             }
         }
+        // Keep the portcullis raised above player height; the gate must be traversable.
         for (int x = 44; x <= 52; x++) {
-            for (int y = baseY + 2; y <= baseY + 14; y++) {
+            for (int y = baseY + 10; y <= baseY + 14; y++) {
                 if ((x + y) % 2 == 0) {
                     level.setBlock(new BlockPos(x, y, 18), Blocks.IRON_BARS.defaultBlockState(), 3);
                 }
             }
         }
 
-        // Elevated processional bridge connects the arrival portal to the fortress gate.
+        // Broad approach starts on the arrival platform itself and runs
+        // directly to the castle's freestanding exterior staircase.
         int arrivalY = Math.max(level.getMinY() + 8, level.getHeight(
                 net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,
                 0, 0) - 1);
-        for (int step = 0; step <= 40; step++) {
-            int x = 8 + step;
-            int z = 8 + (step * 10 / 40);
-            int y = arrivalY + (baseY - arrivalY) * step / 40;
-            for (int width = -3; width <= 3; width++) {
-                level.setBlock(new BlockPos(x, y, z + width),
-                        width == -3 || width == 3 ? trim : foundation, 3);
-                if (width == -3 || width == 3) {
-                    level.setBlock(new BlockPos(x, y + 1, z + width),
-                            Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+        for (int step = 0; step <= 48; step++) {
+            int x = step;
+            int z = 8 + (step * 2 / 48);
+            int y = arrivalY + (baseY - arrivalY) * step / 48;
+            for (int width = -5; width <= 5; width++) {
+                BlockPos deck = new BlockPos(x, y, z + width);
+                level.setBlock(deck, width == -5 || width == 5 ? trim : foundation, 3);
+                if (width == -5 || width == 5) {
+                    level.setBlock(deck.above(), Blocks.GOLD_BLOCK.defaultBlockState(), 3);
                 }
             }
-            if (step % 5 == 0) {
-                for (int width : new int[]{-4, 4}) {
-                    for (int pillarY = y - 1; pillarY >= Math.max(level.getMinY() + 1, y - 8); pillarY--) {
+            if (step % 6 == 0) {
+                for (int width : new int[]{-6, 6}) {
+                    for (int pillarY = y - 1; pillarY >= Math.max(level.getMinY() + 1, y - 10); pillarY--) {
                         level.setBlock(new BlockPos(x, pillarY, z + width),
                                 Blocks.POLISHED_BLACKSTONE_BRICKS.defaultBlockState(), 3);
                     }
                     level.setBlock(new BlockPos(x, y + 1, z + width),
                             Blocks.SEA_LANTERN.defaultBlockState(), 3);
+                }
+            }
+        }
+
+        // Grand staircase stands OUTSIDE the front wall. Wide two-block
+        // treads climb to the gate, with a matching descent into the court.
+        for (int z = 10; z <= 17; z++) {
+            int rise = (z - 10) / 2;
+            int treadY = baseY + rise;
+            for (int x = 42; x <= 54; x++) {
+                for (int fillY = baseY; fillY <= treadY; fillY++) {
+                    level.setBlock(new BlockPos(x, fillY, z),
+                            x == 42 || x == 54 ? trim : foundation, 3);
+                }
+                if (x == 42 || x == 54) {
+                    level.setBlock(new BlockPos(x, treadY + 1, z),
+                            Blocks.GOLD_BLOCK.defaultBlockState(), 3);
+                }
+            }
+        }
+        for (int z = 19; z <= 24; z++) {
+            int drop = (z - 19) / 2;
+            int treadY = baseY + 3 - drop;
+            for (int x = 43; x <= 53; x++) {
+                for (int fillY = baseY; fillY <= treadY; fillY++) {
+                    level.setBlock(new BlockPos(x, fillY, z), foundation, 3);
                 }
             }
         }
