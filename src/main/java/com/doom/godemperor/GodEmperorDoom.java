@@ -292,6 +292,7 @@ public class GodEmperorDoom {
         TABS.register(modBus);
         
         DoomProgression.register();
+        DoomLoadout.register();
         
         ATTACHMENTS.register(modBus);
 
