@@ -290,6 +290,9 @@ public class GodEmperorDoom {
     public GodEmperorDoom(IEventBus modBus) {
         ITEMS.register(modBus);
         TABS.register(modBus);
+        
+        DoomProgression.register();
+        
         ATTACHMENTS.register(modBus);
 
         NeoForge.EVENT_BUS.addListener(this::onPlayerTick);
