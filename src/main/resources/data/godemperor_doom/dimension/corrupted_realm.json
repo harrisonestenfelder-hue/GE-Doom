@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:overworld",
+  "generator": {
+    "type": "minecraft:flat",
+    "settings": {
+      "biome": "minecraft:warped_forest",
+      "features": false,
+      "lakes": false,
+      "layers": [
+        {
+          "block": "minecraft:bedrock",
+          "height": 1
+        },
+        {
+          "block": "minecraft:crying_obsidian",
+          "height": 5
+        },
+        {
+          "block": "minecraft:soul_soil",
+          "height": 3
+        },
+        {
+          "block": "minecraft:warped_nylium",
+          "height": 1
+        }
+      ],
+      "structure_overrides": []
+    }
+  }
+}
