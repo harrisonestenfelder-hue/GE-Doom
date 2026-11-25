@@ -1,12 +1,18 @@
 {
   "itemGroup.godemperor_doom": "God Emperor Doom",
+
+  "item.godemperor_doom.doom_sigil": "Doom Sigil",
+
+  "item.godemperor_doom.latverian_steel_ingot": "Latverian Steel Ingot",
+  "item.godemperor_doom.beyonder_ingot": "Beyonder Ingot",
+
   "item.godemperor_doom.doom_helmet": "Doctor Doom's Helmet",
   "item.godemperor_doom.doom_chestplate": "Doctor Doom's Chestplate",
   "item.godemperor_doom.doom_leggings": "Doctor Doom's Leggings",
   "item.godemperor_doom.doom_boots": "Doctor Doom's Boots",
+
   "item.godemperor_doom.god_helmet": "God Emperor Doom's Helmet",
   "item.godemperor_doom.god_chestplate": "God Emperor Doom's Chestplate",
   "item.godemperor_doom.god_leggings": "God Emperor Doom's Leggings",
-  "item.godemperor_doom.god_boots": "God Emperor Doom's Boots",
-  "item.godemperor_doom.doom_sigil": "Doom Sigil"
+  "item.godemperor_doom.god_boots": "God Emperor Doom's Boots"
 }
