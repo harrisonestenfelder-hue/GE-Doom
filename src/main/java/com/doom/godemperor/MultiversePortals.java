@@ -343,6 +343,13 @@ public final class MultiversePortals {
 
     private static void pillar(
             ServerLevel level, int x, int baseY, int z, int height,
+            BlockState body, Block crown
+    ) {
+        pillar(level, x, baseY, z, height, body, crown.defaultBlockState());
+    }
+
+    private static void pillar(
+            ServerLevel level, int x, int baseY, int z, int height,
             BlockState body, BlockState crown
     ) {
         for (int y = 0; y < height; y++) {
