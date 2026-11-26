@@ -134,7 +134,8 @@ public final class HeroSuitSystem {
         Vec3 look = player.getLookAngle().normalize();
         LivingEntity target = findTarget(player, 30.0, 2.0);
         int color = suit.color();
-        var level = player.serverLevel();
+        net.minecraft.server.level.ServerLevel level =
+                (net.minecraft.server.level.ServerLevel) player.level();
 
         switch (power) {
             case "anti_blast", "monitor_blast", "martian_vision", "spectre_blast",
