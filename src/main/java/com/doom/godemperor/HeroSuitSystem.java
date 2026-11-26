@@ -66,6 +66,8 @@ public final class HeroSuitSystem {
                 id, properties -> new Item(properties.humanoidArmor(material, type)));
     }
 
+    public static Suit[] allSuits() { return new Suit[]{ANTI_MONITOR, MONITOR, MARTIAN, SPECTRE, HARBINGER}; }
+
     public static void register() {
         // Forces suit item registration before the shared item registry is attached.
     }
@@ -136,7 +138,7 @@ public final class HeroSuitSystem {
 
         switch (power) {
             case "anti_blast", "monitor_blast", "martian_vision", "spectre_blast",
-                    "harbinger_blast", "anti_pulse", "monitor_pulse", "spectre_wrath",
+                    "harbinger_blast", "anti_cosmic", "anti_pulse", "monitor_pulse", "spectre_wrath",
                     "spectre_judgment", "harbinger_pulse" -> {
                 beam(player, color, 30);
                 if (target != null) hit(player, target, power.contains("judgment") ? 24 : 16, 1.4);
@@ -204,11 +206,6 @@ public final class HeroSuitSystem {
             case "martian_strength" -> {
                 player.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 300, 3));
                 player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 200, 1));
-            }
-            case "spectre_wrath" -> {
-                player.addEffect(new MobEffectInstance(MobEffects.STRENGTH, 220, 3));
-                player.addEffect(new MobEffectInstance(MobEffects.RESISTANCE, 220, 2));
-                burst(player, color, 50);
             }
             case "harbinger_duplicate" -> {
                 player.addEffect(new MobEffectInstance(MobEffects.INVISIBILITY, 70, 0));
