@@ -73,6 +73,10 @@ public final class DoomAbilities {
     }
 
     public static void activate(ServerPlayer player, int slot) {
+        if (HeroSuitSystem.activate(player, slot)) {
+            return;
+        }
+
         if (slot < 0 || slot >= DoomLoadout.SLOT_COUNT) {
             return;
         }
