@@ -253,6 +253,13 @@ public class GodEmperorDoom {
                                 output.accept(GOD_CHESTPLATE.get());
                                 output.accept(GOD_LEGGINGS.get());
                                 output.accept(GOD_BOOTS.get());
+
+                                for (HeroSuitSystem.Suit suit : HeroSuitSystem.allSuits()) {
+                                    output.accept(suit.helmet().get());
+                                    output.accept(suit.chest().get());
+                                    output.accept(suit.legs().get());
+                                    output.accept(suit.boots().get());
+                                }
                             })
                             .build()
             );
@@ -302,6 +309,7 @@ public class GodEmperorDoom {
 
     public GodEmperorDoom(IEventBus modBus) {
         BeyonderRegistry.register(modBus);
+        HeroSuitSystem.register();
         ITEMS.register(modBus);
         TABS.register(modBus);
 
